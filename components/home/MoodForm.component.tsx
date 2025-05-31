@@ -1,3 +1,4 @@
+import { CreateMoodResponse, Mood } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import { useForm } from "@/hooks/useForm.hook";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -7,6 +8,7 @@ import { ActivityIndicator, Modal, Text, TextInput, TouchableOpacity, View } fro
 interface ModalComponentProps {
     visible: boolean;
     onClose: () => void;
+    onCreate: (mood: Mood) => void;
 }
 
 const FIRST_STEP_ANSWERS = [
@@ -60,11 +62,12 @@ export default function ModalFormComponent(props: ModalComponentProps) {
             setIsLoading(true);
             const token = await AsyncStorage.getItem('authToken');
             if( !token ) return; 
-            const { data } = await moodTrackedApi.post('/moods', {mood, sleep, reflection}, { headers: { Authorization: `Bearer ${token}`} });
+            const { data } = await moodTrackedApi.post<CreateMoodResponse>('/moods', {mood, sleep, reflection}, { headers: { Authorization: `Bearer ${token}`} });
             if( data ) {
                 setCurrentStep(0);
                 setIsLoading(false);
                 props.onClose()
+                props.onCreate(data.payload);
                 return;
             };
         } catch (error) {
@@ -85,11 +88,10 @@ export default function ModalFormComponent(props: ModalComponentProps) {
 
     return(
         <Modal
-            animationType="fade"
+            animationType="slide"
             transparent={true}
             visible={props.visible}
             onRequestClose={props.onClose}
-            className="relative z-10"
         >
             <View
                 className="flex flex-1 relative justify-center items-center z-20"
@@ -152,10 +154,11 @@ export default function ModalFormComponent(props: ModalComponentProps) {
                         (currentStep === 0) && (
                             <>
                                 {
-                                    FIRST_STEP_ANSWERS.map(answer => (
+                                    FIRST_STEP_ANSWERS.map((answer, key) => (
                                         <TouchableOpacity
                                             className="mt-2"
                                             onPress={() => onChange(answer.key, 'mood')}
+                                            key={key}
                                         >
                                             <View
                                                 className="flex flex-row py-4 px-4 bg-[#505194]"
@@ -180,9 +183,10 @@ export default function ModalFormComponent(props: ModalComponentProps) {
                         (currentStep === 1) && (
                             <>
                                 {
-                                    SECOND_STEP_ANSWERS.map(answer => (
+                                    SECOND_STEP_ANSWERS.map((answer, key) => (
                                         <TouchableOpacity
                                             className="mt-2"
+                                            key={key}
                                             onPress={() => onChange(answer.key, 'sleep')}
                                         >
                                             <View

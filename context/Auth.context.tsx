@@ -2,16 +2,18 @@ import { LoginProps, LoginResponse, RegisterProps, UserPayload } from "@/apis/mo
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 export interface AuthState {
     isLoggedIn: boolean;
     userData?: UserPayload;
     token?: string;
+    isLoadingAuthState: boolean;
 }
 
 export const initialAuthState: AuthState = {
     isLoggedIn: false,
+    isLoadingAuthState: true,
 }
 
 export interface AuthContextProps {
@@ -39,13 +41,16 @@ export const AuthProvider = ({children}: any) => {
             const { data } = await moodTrackedApi.get('/users', { headers: { 'Authorization': `Bearer ${token}` }});
             setauthState({
                 isLoggedIn: true,
-                userData: data.payload
+                userData: data.payload,
+                isLoadingAuthState: false,
             })
+            router.replace('/')
         } catch (error) {
             console.log(`Ocurrio un error en getCurrentUser: ${error}`)
             console.log(error)
             setauthState({
-                isLoggedIn: false
+                isLoggedIn: false,
+                isLoadingAuthState: false,
             })
             router.replace("/login");
         }
@@ -58,7 +63,8 @@ export const AuthProvider = ({children}: any) => {
             await AsyncStorage.setItem('authToken', data.payload.token);
             setauthState({
                 isLoggedIn: true,
-                token: data.payload.token
+                token: data.payload.token,
+                isLoadingAuthState: false
             })
             return true;
         } catch (error) {
@@ -82,10 +88,16 @@ export const AuthProvider = ({children}: any) => {
         AsyncStorage.removeItem('authToken');
         setauthState({
             isLoggedIn: false,
-            token: undefined
+            token: undefined,
+            isLoadingAuthState: false
         })
         router.replace("/login");
     }
+
+    useEffect(() => {
+      getCurrentUser()
+    }, [])
+    
 
     return (
         <AuthContext.Provider

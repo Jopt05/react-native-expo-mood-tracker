@@ -50,3 +50,8 @@ export interface Mood {
   authorId:   number;
   reflection: null | string;
 }
+export interface CreateMoodResponse {
+  message:    string;
+  statusCode: number;
+  payload:    Mood;
+}
