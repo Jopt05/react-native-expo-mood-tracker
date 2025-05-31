@@ -13,10 +13,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/app_icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.jopt05.moodtrackerreactnative"
     },
     "web": {
       "bundler": "metro",
@@ -24,6 +25,7 @@
       "favicon": "./assets/images/app_icon.png"
     },
     "plugins": [
+      "expo-build-properties",
       "expo-router",
       [
         "expo-splash-screen",
@@ -38,6 +40,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0b2e9070-f85c-41bd-80f1-40e5e883c49f"
+      }
     }
   }
 }

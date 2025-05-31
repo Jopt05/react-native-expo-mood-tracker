@@ -8,7 +8,7 @@ import { moodToImage, moodToText, sleepToText } from "@/utils/functions";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useContext, useEffect, useState } from "react";
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
 
@@ -23,6 +23,7 @@ export default function HomeScreen() {
     const [averageSleepSchedule, setAverageSleepSchedule] = useState<string>();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isMoodsModalOpen, setIsMoodsModalOpen] = useState(false);
+    const [isRefreshing, setisRefreshing] = useState(false);
 
     useEffect(() => {
         if( !authState.isLoggedIn ) return; 
@@ -99,9 +100,27 @@ export default function HomeScreen() {
         })
     }
 
+    const handleRefresh = () => {
+        setisRefreshing(true);
+        getMoods();
+    }
+
+    useEffect(() => {
+        if( isRefreshing ) {
+            setisRefreshing(false);
+        }
+    }, [moodData])
+    
+
   return (
     <ProtectedRoute>
         <ScrollView
+            refreshControl={
+                <RefreshControl 
+                    onRefresh={ handleRefresh }
+                    refreshing={ isRefreshing }
+                />
+            }
         >
             <ModalFormComponent 
                 onClose={() => setIsModalOpen(!isModalOpen)}
