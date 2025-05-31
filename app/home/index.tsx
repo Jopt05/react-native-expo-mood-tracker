@@ -8,7 +8,7 @@ import { moodToImage, moodToText, sleepToText } from "@/utils/functions";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useContext, useEffect, useState } from "react";
-import { ActivityIndicator, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
 
@@ -30,15 +30,11 @@ export default function HomeScreen() {
         getMoods()
     }, [])
 
-    if( authState.isLoadingAuthState ) return (
-        <View
-            className="flex flex-1 justify-center items-center"
-        >
-            <ActivityIndicator 
-                size="large"
-            />
-        </View>
-    )
+    useEffect(() => {
+        if( isRefreshing ) {
+            setisRefreshing(false);
+        }
+    }, [moodData])
 
     const currentDate = new Date();
 
@@ -104,12 +100,6 @@ export default function HomeScreen() {
         setisRefreshing(true);
         getMoods();
     }
-
-    useEffect(() => {
-        if( isRefreshing ) {
-            setisRefreshing(false);
-        }
-    }, [moodData])
     
 
   return (

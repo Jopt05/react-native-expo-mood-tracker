@@ -189,19 +189,42 @@ export default function LoginScreen() {
                             </Text>
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={handleToggleRegister}
+                    <View
+                        className="flex flex-row justify-between items-center"
                     >
-                        <View
-                            className="flex flex-row justify-end items-center mt-2"
+                        <TouchableOpacity
+                            className="flex flex-row mt-2"
+                            onPress={handleToggleRegister}
+                            style={{
+                                width: '40%'
+                            }}
                         >
-                            <Text
-                                className="text-[#f5f5ff] font-[Montserrat-regular] text-sm underline"
+                            <View
                             >
-                                { (isRegistering) ? 'Already have an account?' : 'Don\'t have an account?' } 
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
+                                <Text
+                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm underline"
+                                >
+                                    { (isRegistering) ? 'Already have an account?' : 'Don\'t have an account?' } 
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            className="flex flex-row mt-2"
+                            style={{
+                                width: '40%'
+                            }}
+                            onPress={() => { router.navigate('/reset-password') }}
+                        >
+                            <View
+                            >
+                                <Text
+                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm underline text-right"
+                                >
+                                    Forgot your password?
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
                     {
                         (isLoading) && (
                             <ActivityIndicator 
