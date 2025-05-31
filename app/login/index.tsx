@@ -3,7 +3,7 @@ import { useForm } from "@/hooks/useForm.hook";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
-import { KeyboardAvoidingView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function LoginScreen() {
 
@@ -14,6 +14,7 @@ export default function LoginScreen() {
     const [errorMessage, setErrorMessage] = useState("");
     const [sucessMessage, setSetsuccessMessage] = useState("");
     const [isShowingPassord, setIsShowingPassord] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const { email, name, password, onChange } = useForm({
         email: '',
@@ -42,6 +43,7 @@ export default function LoginScreen() {
             setErrorMessage("Name is required");
             return;
         }
+        setIsLoading(true);
         const isRegistered = await registerUser({email, password, name});
         if( isRegistered ) {
             setErrorMessage("");
@@ -52,8 +54,10 @@ export default function LoginScreen() {
                 router.replace("/home");
                 return;
             }; 
+            setIsLoading(false);
             return;
         };
+        setIsLoading(false);
     }
 
     async function handeLogin() {
@@ -65,6 +69,7 @@ export default function LoginScreen() {
             setErrorMessage("Password is required");
             return;
         }
+        setIsLoading(true);
         const isLoggedIn = await login({email, password});
         if( isLoggedIn ) {
             setSetsuccessMessage("Logged in successfully");
@@ -73,6 +78,7 @@ export default function LoginScreen() {
             return;
         };
         setErrorMessage("Invalid credentials");
+        setIsLoading(false);
     }
 
     return(
@@ -196,6 +202,14 @@ export default function LoginScreen() {
                             </Text>
                         </View>
                     </TouchableOpacity>
+                    {
+                        (isLoading) && (
+                            <ActivityIndicator 
+                                className="mt-6"
+                                size="small"
+                            />
+                        )
+                    }
                 </View>
             </View>
         </KeyboardAvoidingView>

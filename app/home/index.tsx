@@ -1,17 +1,20 @@
 import { AuthContext } from "@/context/Auth.context";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
 
-    const { authState } = useContext( AuthContext );
+    const { authState, getCurrentUser } = useContext( AuthContext );
 
     if( !authState.isLoggedIn ) return <Redirect href="/login" />
 
     const currentDate = new Date();
 
+    useEffect(() => {
+        getCurrentUser()
+    }, [])
 
   return (
     <ScrollView
@@ -19,7 +22,7 @@ export default function HomeScreen() {
         <Text
             className="text-center text-3xl mt-10 mb-7 text-[#f5f5ff] font-[Montserrat-bold]"
         >
-            Hello, Omar!
+            Hello, { authState.userData?.name || 'User' }!
         </Text>
         <Text
             className="text-center text-4xl text-[#f5f5ff] font-[Montserrat-bold]"

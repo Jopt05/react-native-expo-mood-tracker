@@ -1,18 +1,17 @@
-import { LoginProps, LoginResponse, RegisterProps } from "@/apis/mood-tracker/interfaces";
+import { LoginProps, LoginResponse, RegisterProps, UserPayload } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useState } from "react";
 
 export interface AuthState {
     isLoggedIn: boolean;
-    userData: any;
+    userData?: UserPayload;
     token?: string;
 }
 
 export const initialAuthState: AuthState = {
     isLoggedIn: false,
-    userData: null,
 }
 
 export interface AuthContextProps {
@@ -20,6 +19,7 @@ export interface AuthContextProps {
     login: (loginData: LoginProps) => Promise<Boolean>;
     registerUser: (registerData: RegisterProps) => Promise<boolean>;
     logout: () => void;
+    getCurrentUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext({} as AuthContextProps);
@@ -28,10 +28,6 @@ export const AuthProvider = ({children}: any) => {
 
     const router = useRouter();
     const [authState, setauthState] = useState(initialAuthState);
-
-    useEffect(() => {
-        getCurrentUser()
-    }, [])
     
     const getCurrentUser = async() => {
         try {
@@ -45,13 +41,11 @@ export const AuthProvider = ({children}: any) => {
                 isLoggedIn: true,
                 userData: data.payload
             })
-            router.replace("/home");
         } catch (error) {
             console.log(error)
             console.log(`Ocurrio un error en getCurrentUser: ${error}`)
             setauthState({
-                isLoggedIn: false,
-                userData: null
+                isLoggedIn: false
             })
             router.replace("/login");
         }
@@ -64,7 +58,6 @@ export const AuthProvider = ({children}: any) => {
             await AsyncStorage.setItem('authToken', data.payload.token);
             setauthState({
                 isLoggedIn: true,
-                userData: null,
                 token: data.payload.token
             })
             return true;
@@ -89,7 +82,6 @@ export const AuthProvider = ({children}: any) => {
         AsyncStorage.removeItem('authToken');
         setauthState({
             isLoggedIn: false,
-            userData: null,
             token: undefined
         })
         router.replace("/login");
@@ -101,7 +93,8 @@ export const AuthProvider = ({children}: any) => {
                 authState: authState,
                 login,
                 registerUser,
-                logout
+                logout,
+                getCurrentUser
             }}
         >
             {children}
