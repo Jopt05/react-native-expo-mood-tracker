@@ -1,24 +1,90 @@
+import { GetMoodsResponse, Mood } from "@/apis/mood-tracker/interfaces";
+import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
+import ModalFormComponent from "@/components/home/MoodForm.component";
 import { AuthContext } from "@/context/Auth.context";
+import { moodToImage, moodToText, sleepToText } from "@/utils/functions";
 import { Ionicons } from "@expo/vector-icons";
-import { Redirect } from "expo-router";
-import { useContext, useEffect } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useContext, useEffect, useState } from "react";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
 
     const { authState, getCurrentUser } = useContext( AuthContext );
-
-    if( !authState.isLoggedIn ) return <Redirect href="/login" />
+    const [moodData, setMoodData] = useState<{moods: Mood[], isLoading: boolean}>({
+        moods: [],
+        isLoading: false
+    });
+    const [todaysMood, setTodaysMood] = useState<Mood>();
+    const [averageMood, setAverageMood] = useState<string>();
+    const [averageSleepSchedule, setAverageSleepSchedule] = useState<string>();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const currentDate = new Date();
 
+    const getMoods = async() => {
+        try {
+            const token = await AsyncStorage.getItem('authToken');
+            if( !token ) return; 
+            const { data } = await moodTrackedApi.get<GetMoodsResponse>('/moods', { headers: { Authorization: `Bearer ${token}` }});
+            setMoodData({
+                moods: data.payload.mood,
+                isLoading: false
+            })
+            getTodaysMood(data.payload.mood);
+            getMostRepeatedMood(data.payload.mood)
+            getMostRepeatedSleep(data.payload.mood)
+        } catch (error) {
+            console.log('Error al obtener moods')
+            console.log(error)
+            setMoodData({
+                moods: [],
+                isLoading: false
+            })
+        }
+    }
+
+    const getTodaysMood = (moodList: Mood[]) => {
+        const currentDate = new Date().toLocaleDateString();
+        const todaysMood = moodList.find( m => new Date(m.createdAt).toLocaleDateString() == currentDate );
+        if( todaysMood ) {
+            setTodaysMood(todaysMood);
+            return
+        }
+    }
+
+    const getMostRepeatedMood = (moodList: Mood[]) => {
+        if( moodList.length === 0 ) return;
+        const moodCount = moodList.reduce((acc: any, mood: Mood) => {
+        acc[mood.mood] = (acc[mood.mood] || 0) + 1;
+        return acc;
+        }, {});
+        const mostRepeatedMood = Object.keys(moodCount).reduce((a, b) => moodCount[a] > moodCount[b] ? a : b);
+        setAverageMood(mostRepeatedMood);
+    }
+
+    const getMostRepeatedSleep = (moodList: Mood[]) => {
+        if( moodList.length === 0 ) return;
+        const sleepCount = moodList.reduce((acc: any, mood: Mood) => {
+        acc[mood.sleep] = (acc[mood.sleep] || 0) + 1;
+        return acc;
+        }, {});
+        const mostRepeatedSleep = Object.keys(sleepCount).reduce((a, b) => sleepCount[a] > sleepCount[b] ? a : b);
+        setAverageSleepSchedule(mostRepeatedSleep);
+    }
+
     useEffect(() => {
         getCurrentUser()
+        getMoods()
     }, [])
 
   return (
     <ScrollView
     >
+        <ModalFormComponent 
+            onClose={() => setIsModalOpen(!isModalOpen)}
+            visible={isModalOpen}
+        />
         <Text
             className="text-center text-3xl mt-10 mb-7 text-[#f5f5ff] font-[Montserrat-bold]"
         >
@@ -34,69 +100,85 @@ export default function HomeScreen() {
         >
             { currentDate.toDateString() }
         </Text>
-        <View
-            className="flex flex-row justify-center mt-14"
-        >
-            <TouchableOpacity
-                className="bg-[#505194] py-6 px-12 rounded-md"
-            >
-                <Text
-                    className="text-[#f5f5ff] font-[Montserrat-bold] text-xl"
-                >
-                    Log today's mood
-                </Text>
-            </TouchableOpacity>
-        </View>
-        <View
-            className="flex flex-row py-4 px-4 mt-20 bg-[#44446f] rounded-xl"
-        >
-            <View
-                style={{
-                    minHeight: 150
-                }}
-                className="flex flex-col flex-1"
-            >
-                <Text
-                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl mb-2"
-                >
-                    I'm feeling
-                </Text>
-                <Text
-                    className="text-[#f5f5ff] font-[Montserrat-bold] text-3xl flex-1"
-                >
-                    Very happy
-                </Text>
-                <Text
-                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm"
-                >
-                    "Lorem ipsum dolor sit amet consectetur adipisicing"
-                </Text>
-            </View>
-            <View
-                className="bg-red-400 flex flex-row flex-1"
-            >
-
-            </View>
-        </View>
-        <View
-            className="flex flex-col py-4 px-4 mt-4 bg-[#44446f] rounded-xl"
-        >
-            <View
-                className="flex flex-row items-center gap-4"
-            >
-                <Ionicons name="bed-outline" color="#f5f5ff" size={20} />
-                <Text
-                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl"
-                >
-                    Sleep
-                </Text>
-            </View>
-            <Text
-                className="text-[#f5f5ff] font-[Montserrat-bold] text-3xl mt-2"
-            >
-                +9 hours
-            </Text>
-        </View>
+        {
+            (!todaysMood) && (
+                <>
+                    <View
+                        className="flex flex-row justify-center mt-14"
+                    >
+                        <TouchableOpacity
+                            className="bg-[#505194] py-6 px-12 rounded-md"
+                            onPress={() => setIsModalOpen(true)}
+                        >
+                            <Text
+                                className="text-[#f5f5ff] font-[Montserrat-bold] text-xl"
+                            >
+                                Log today's mood
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </>
+            )
+        }
+        {
+            (todaysMood) && (
+                <>
+                    <View
+                        className="flex flex-row py-4 px-4 mt-20 bg-[#44446f] rounded-xl"
+                    >
+                        <View
+                            style={{
+                                minHeight: 150
+                            }}
+                            className="flex flex-col flex-1"
+                        >
+                            <Text
+                                className="text-[#f5f5ff] font-[Montserrat-regular] text-xl mb-2"
+                            >
+                                I'm feeling
+                            </Text>
+                            <Text
+                                className="text-[#f5f5ff] font-[Montserrat-bold] text-3xl flex-1"
+                            >
+                                { moodToText(todaysMood.mood) }
+                            </Text>
+                            <Text
+                                className="text-[#f5f5ff] font-[Montserrat-regular] text-sm"
+                            >
+                                "Lorem ipsum dolor sit amet consectetur adipisicing"
+                            </Text>
+                        </View>
+                        <View
+                            className="flex flex-row flex-1 items-end justify-end"
+                        >
+                            <Image
+                                className=""
+                                source={ moodToImage(todaysMood.mood) }
+                            />
+                        </View>
+                    </View>
+                    <View
+                        className="flex flex-col py-4 px-4 mt-4 bg-[#44446f] rounded-xl"
+                    >
+                        <View
+                            className="flex flex-row items-center gap-4"
+                        >
+                            <Ionicons name="bed-outline" color="#f5f5ff" size={20} />
+                            <Text
+                                className="text-[#f5f5ff] font-[Montserrat-regular] text-xl"
+                            >
+                                Sleep
+                            </Text>
+                        </View>
+                        <Text
+                            className="text-[#f5f5ff] font-[Montserrat-bold] text-3xl mt-2"
+                        >
+                            { sleepToText(todaysMood.sleep) } hours
+                        </Text>
+                    </View>
+                </>
+            )
+        }
         <View
             className="flex flex-col py-4 px-4 mt-4 bg-[#44446f] rounded-xl"
         >
@@ -111,7 +193,7 @@ export default function HomeScreen() {
                 <Text
                     className="text-[#f5f5ff] font-[Montserrat-regular] text-sm"
                 >
-                    (Last 5 check-ins)
+                    (Last { moodData.moods.length } check-ins)
                 </Text>
             </View>
             <View   
@@ -120,7 +202,7 @@ export default function HomeScreen() {
                 <Text
                     className="text-2xl text-[#f5f5ff] font-[Montserrat-bold] mb-4"
                 >
-                    Very happy
+                    { moodToText(averageMood || '') }
                 </Text>
                 <View
                     className="flex flex-row items-center gap-2"
@@ -133,7 +215,7 @@ export default function HomeScreen() {
                     <Text
                         className="text-[#f5f5ff] font-[Montserrat-regular] text-sm text-wrap"
                     >
-                        Predominant mood from the past N check-ins
+                        Predominant mood from the past { moodData.moods.length } check-ins
                     </Text>
                 </View>
             </View>
@@ -148,7 +230,7 @@ export default function HomeScreen() {
                 <Text
                     className="text-[#f5f5ff] font-[Montserrat-regular] text-sm"
                 >
-                    (Last 5 check-ins)
+                    (Last { moodData.moods.length } check-ins)
                 </Text>
             </View>
             <View   
@@ -157,7 +239,7 @@ export default function HomeScreen() {
                 <Text
                     className="text-2xl text-[#f5f5ff] font-[Montserrat-bold] mb-4"
                 >
-                    Very happy
+                    { sleepToText(averageSleepSchedule || '') } hours
                 </Text>
                 <View
                     className="flex flex-row items-center gap-2"
@@ -170,7 +252,7 @@ export default function HomeScreen() {
                     <Text
                         className="text-[#f5f5ff] font-[Montserrat-regular] text-sm text-wrap"
                     >
-                        Predominant mood from the past N check-ins
+                        Predominant sleep schedule from the past { moodData.moods.length } check-ins
                     </Text>
                 </View>
             </View>

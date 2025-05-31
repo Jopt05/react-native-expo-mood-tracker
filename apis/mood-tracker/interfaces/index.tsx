@@ -26,3 +26,27 @@ export interface UserPayload {
   createdAt: Date;
   updatedAt: Date;
 }
+export interface GetMoodsResponse {
+  message:    string;
+  statusCode: number;
+  payload:    Payload;
+}
+
+export interface Payload {
+  page:     number;
+  limit:    number;
+  total:    number;
+  next:     string;
+  previous: null;
+  mood:     Mood[];
+}
+
+export interface Mood {
+  id:         number;
+  mood:       string;
+  sleep:      string;
+  createdAt:  Date;
+  updatedAt:  Date;
+  authorId:   number;
+  reflection: null | string;
+}

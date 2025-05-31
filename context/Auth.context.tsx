@@ -42,8 +42,8 @@ export const AuthProvider = ({children}: any) => {
                 userData: data.payload
             })
         } catch (error) {
-            console.log(error)
             console.log(`Ocurrio un error en getCurrentUser: ${error}`)
+            console.log(error)
             setauthState({
                 isLoggedIn: false
             })
