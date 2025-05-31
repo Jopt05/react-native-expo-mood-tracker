@@ -94,6 +94,9 @@ export default function HomeScreen() {
             moods: [mood, ...moodData.moods],
             isLoading: false
         })
+        getTodaysMood([mood, ...moodData.moods]);
+        getMostRepeatedMood([mood, ...moodData.moods])
+        getMostRepeatedSleep([mood, ...moodData.moods])
     }
 
     const handleRefresh = () => {
