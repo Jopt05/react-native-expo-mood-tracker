@@ -1,6 +1,7 @@
 import { GetMoodsResponse, Mood } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
-import { moodToImage, sleepToText } from "@/utils/functions";
+import { getItemFromAsyncStorage } from "@/utils/asyncstorage";
+import { moodToImage, sleepToText } from "@/utils/mood";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
@@ -21,6 +22,10 @@ export default function MoodListComponent(props: ModalComponentProps) {
     })
     
     const getMoods = async() => {
+        setPagingData({
+            ...pagingData,
+            isLoading: true
+        })
         try {
             const token = await AsyncStorage.getItem('authToken');
             if( !token ) return;
@@ -34,12 +39,20 @@ export default function MoodListComponent(props: ModalComponentProps) {
         } catch (error) {
             console.log('Ocurrió un error al obtener moods')
             console.log(error)
+            setPagingData({
+                ...pagingData,
+                isLoading: false
+            })
         }
     }
 
     const getMoreMoods = async(page = 1) => {
+        setPagingData({
+            ...pagingData,
+            isLoading: true
+        })
         try {
-            const token = await AsyncStorage.getItem('authToken');
+            const token = await getItemFromAsyncStorage('authToken');
             if( !token ) return;
             const { data } = await moodTrackedApi.get<GetMoodsResponse>(`/moods?page=${page}`, { headers: { Authorization: `Bearer ${token}`} });
             setMoodsList([...moodsList, ...data.payload.mood]);
@@ -51,6 +64,10 @@ export default function MoodListComponent(props: ModalComponentProps) {
         } catch (error) {
             console.log('Ocurrió un error al obtener moods')
             console.log(error)
+            setPagingData({
+                ...pagingData,
+                isLoading: false
+            })
         }
     }
 

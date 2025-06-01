@@ -55,3 +55,12 @@ export interface CreateMoodResponse {
   statusCode: number;
   payload:    Mood;
 }
+export interface AdviceResponse {
+  message:    string;
+  statusCode: number;
+  payload:    AdviceData;
+}
+
+export interface AdviceData {
+  advice: string;
+}

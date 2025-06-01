@@ -1,6 +1,6 @@
 import { LoginProps, LoginResponse, RegisterProps, UserPayload } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getItemFromAsyncStorage, removeItemFromAsyncStorage, setItemToAsyncStorage } from "@/utils/asyncstorage";
 import { useRouter } from "expo-router";
 import { createContext, useEffect, useState } from "react";
 
@@ -13,7 +13,7 @@ export interface AuthState {
 
 export const initialAuthState: AuthState = {
     isLoggedIn: false,
-    isLoadingAuthState: true,
+    isLoadingAuthState: false,
 }
 
 export interface AuthContextProps {
@@ -31,9 +31,19 @@ export const AuthProvider = ({children}: any) => {
     const router = useRouter();
     const [authState, setauthState] = useState(initialAuthState);
     
+    useEffect(() => {
+      getCurrentUser()
+    }, [])
+    
     const getCurrentUser = async() => {
+        if( authState.isLoadingAuthState || authState.isLoggedIn ) return; 
+        console.log('Obteniendo información de usuario')
         try {
-            const token = await AsyncStorage.getItem('authToken');
+            setauthState({
+                isLoggedIn: false,
+                isLoadingAuthState: true,
+            })
+            const token = await getItemFromAsyncStorage('authToken');
             if( !token ) {
                 router.replace("/login");
                 return;
@@ -60,7 +70,7 @@ export const AuthProvider = ({children}: any) => {
     const login = async (loginData: LoginProps) => {
         try {
             const { data } = await moodTrackedApi.post<LoginResponse>('/users/login', loginData);
-            await AsyncStorage.setItem('authToken', data.payload.token);
+            await setItemToAsyncStorage('authToken', data.payload.token);
             setauthState({
                 isLoggedIn: true,
                 token: data.payload.token,
@@ -84,8 +94,8 @@ export const AuthProvider = ({children}: any) => {
    
     }
 
-    const logout = () => {
-        AsyncStorage.removeItem('authToken');
+    const logout = async() => {
+        await removeItemFromAsyncStorage('authToken');
         setauthState({
             isLoggedIn: false,
             token: undefined,
@@ -93,10 +103,6 @@ export const AuthProvider = ({children}: any) => {
         })
         router.replace("/login");
     }
-
-    useEffect(() => {
-      getCurrentUser()
-    }, [])
     
 
     return (

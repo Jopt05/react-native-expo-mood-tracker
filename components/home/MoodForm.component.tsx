@@ -1,7 +1,7 @@
 import { CreateMoodResponse, Mood } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import { useForm } from "@/hooks/useForm.hook";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getItemFromAsyncStorage } from "@/utils/asyncstorage";
 import { useState } from "react";
 import { ActivityIndicator, Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 
@@ -60,7 +60,7 @@ export default function ModalFormComponent(props: ModalComponentProps) {
     const handleCreateMood = async() => {
         try {
             setIsLoading(true);
-            const token = await AsyncStorage.getItem('authToken');
+            const token = await getItemFromAsyncStorage('authToken');
             if( !token ) return; 
             const { data } = await moodTrackedApi.post<CreateMoodResponse>('/moods', {mood, sleep, reflection}, { headers: { Authorization: `Bearer ${token}`} });
             if( data ) {
