@@ -1,4 +1,5 @@
 import { Mood } from "@/apis/mood-tracker/interfaces";
+import ChartComponent from "@/components/home/Chart.component";
 import ModalFormComponent from "@/components/home/MoodForm.component";
 import MoodListComponent from "@/components/home/MoodList.component";
 import ProtectedRoute from "@/components/shared/ProtectedRoute.component";
@@ -32,7 +33,7 @@ export default function HomeScreen() {
     useEffect(() => {
         if( !authState.isLoggedIn ) return; 
         getMoods()
-        getAdvice();
+        // getAdvice();
         getCurrentUser();
     }, [])
 
@@ -269,6 +270,9 @@ export default function HomeScreen() {
                     </View>
                 </View>
             </View>
+            <ChartComponent 
+                data={ moodsList }
+            />
             <View
                 className="flex flex-row justify-center my-8"
             >
