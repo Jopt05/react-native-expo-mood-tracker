@@ -1,5 +1,5 @@
 import { Mood } from "@/apis/mood-tracker/interfaces";
-import { formatMoodToChartColor, numberToSleep, sleepToNumber } from "@/utils/mood";
+import { formatMoodToChartColor, moodToText, numberToSleep, sleepToNumber } from "@/utils/mood";
 import { useFont } from "@shopify/react-native-skia";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -12,6 +12,14 @@ interface ChartComponentProps {
 interface ChartDataState extends ChartComponentProps {
   isLoading: boolean
 }
+
+const MOODS_LIST = [
+  'VERY_SAD',
+  'SAD',
+  'NEUTRAL',
+  'HAPPY',
+  'VERY_HAPPY'
+]
 
 const Montserrat = require('../../assets/fonts/Montserrat-Regular.ttf')
 
@@ -102,6 +110,38 @@ export default function ChartComponent(props: ChartComponentProps) {
               </CartesianChart>
             </View>
           </ScrollView>
+          <View
+            className="flex flex-row justify-center items-center gap-2 mt-4"
+            style={{
+              flexWrap: 'wrap'
+            }}
+          >
+            {
+              MOODS_LIST.map((m, i) => (
+                <View 
+                  className="flex flex-row items-center gap-2"
+                  style={{
+                    width: 100,
+                    flexWrap: 'wrap'
+                  }}
+                  key={i}
+                >
+                  <Text
+                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm"
+                  >
+                    { moodToText(m) }
+                  </Text>
+                  <View
+                    className="w-4 h-4 "
+                    style={{
+                      backgroundColor: formatMoodToChartColor(m)
+                    }}
+                  >
+                  </View>
+                </View>
+              ))
+            }
+          </View>
         </View>
     )
 }
