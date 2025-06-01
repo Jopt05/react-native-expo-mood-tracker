@@ -33,7 +33,7 @@ export default function HomeScreen() {
     useEffect(() => {
         if( !authState.isLoggedIn ) return; 
         getMoods()
-        // getAdvice();
+        getAdvice();
         getCurrentUser();
     }, [])
 
@@ -270,9 +270,13 @@ export default function HomeScreen() {
                     </View>
                 </View>
             </View>
-            <ChartComponent 
-                data={ moodsList }
-            />
+            {
+                (!isModalOpen && !isMoodsModalOpen) && (
+                    <ChartComponent 
+                        data={ moodsList }
+                    />
+                )
+            }
             <View
                 className="flex flex-row justify-center my-8"
             >
