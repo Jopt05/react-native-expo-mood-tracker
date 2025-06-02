@@ -21,7 +21,7 @@ export interface AuthContextProps {
     login: (loginData: LoginProps) => Promise<Boolean>;
     registerUser: (registerData: RegisterProps) => Promise<boolean>;
     logout: () => void;
-    getCurrentUser: () => Promise<void>;
+    validateAuth: () => Promise<void>;
 }
 
 export const AuthContext = createContext({} as AuthContextProps);
@@ -36,7 +36,7 @@ export const AuthProvider = ({children}: any) => {
     }, [])
     
     const validateAuth = async() => {
-        if( authState.isLoadingAuthState || authState.isLoggedIn ) return; 
+        if( authState.isLoadingAuthState || authState.userData ) return; 
         console.log('Validando auth de usuario')
         try {
             setauthState({
@@ -110,7 +110,7 @@ export const AuthProvider = ({children}: any) => {
                 login,
                 registerUser,
                 logout,
-                getCurrentUser: validateAuth
+                validateAuth
             }}
         >
             {children}

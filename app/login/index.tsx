@@ -74,7 +74,9 @@ export default function LoginScreen() {
         if( isLoggedIn ) {
             setSetsuccessMessage("Logged in successfully");
             setErrorMessage("");
-            router.replace("/home");
+            setTimeout(() => {
+               router.replace("/home"); 
+            }, 500);
             return;
         };
         setErrorMessage("Invalid credentials");

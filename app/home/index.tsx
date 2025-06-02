@@ -13,7 +13,7 @@ import { Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 
 
 export default function HomeScreen() {
 
-    const { authState, getCurrentUser } = useContext( AuthContext );
+    const { authState, validateAuth } = useContext( AuthContext );
 
     const { 
         moodsList, 
@@ -31,10 +31,10 @@ export default function HomeScreen() {
     const [isRefreshing, setisRefreshing] = useState(false);
 
     useEffect(() => {
-        if( !authState.isLoggedIn ) return; 
+        if( authState.userData ) return; 
+        validateAuth();
         getMoods()
         getAdvice();
-        getCurrentUser();
     }, [authState.isLoggedIn])
 
     const currentDate = new Date();
