@@ -32,12 +32,12 @@ export const AuthProvider = ({children}: any) => {
     const [authState, setauthState] = useState(initialAuthState);
     
     useEffect(() => {
-      getCurrentUser()
+      validateAuth()
     }, [])
     
-    const getCurrentUser = async() => {
+    const validateAuth = async() => {
         if( authState.isLoadingAuthState || authState.isLoggedIn ) return; 
-        console.log('Obteniendo información de usuario')
+        console.log('Validando auth de usuario')
         try {
             setauthState({
                 isLoggedIn: false,
@@ -54,7 +54,6 @@ export const AuthProvider = ({children}: any) => {
                 userData: data.payload,
                 isLoadingAuthState: false,
             })
-            router.replace('/')
         } catch (error) {
             console.log(`Ocurrio un error en getCurrentUser: ${error}`)
             console.log(error)
@@ -64,7 +63,6 @@ export const AuthProvider = ({children}: any) => {
             })
             router.replace("/login");
         }
-    
     }
 
     const login = async (loginData: LoginProps) => {
@@ -112,7 +110,7 @@ export const AuthProvider = ({children}: any) => {
                 login,
                 registerUser,
                 logout,
-                getCurrentUser
+                getCurrentUser: validateAuth
             }}
         >
             {children}

@@ -35,7 +35,7 @@ export default function HomeScreen() {
         getMoods()
         getAdvice();
         getCurrentUser();
-    }, [])
+    }, [authState.isLoggedIn])
 
     const currentDate = new Date();
 
@@ -127,7 +127,7 @@ export default function HomeScreen() {
                                     { moodToText(todaysMood.mood) }
                                 </Text>
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm"
+                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm mt-6"
                                 >
                                     "{advice}"
                                 </Text>
