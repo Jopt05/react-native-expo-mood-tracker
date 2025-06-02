@@ -1,12 +1,18 @@
 import { AuthContext } from "@/context/Auth.context";
-import { Redirect } from "expo-router";
-import { useContext } from "react";
+import { Redirect, useFocusEffect } from "expo-router";
+import { useCallback, useContext } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
-    const { authState } = useContext( AuthContext );
+  const { authState, validateAuth } = useContext( AuthContext );
+
+  useFocusEffect(
+    useCallback(() => {
+      validateAuth()
+    }, [])
+  )
 
   if (authState.isLoadingAuthState) {
     return (
