@@ -1,6 +1,7 @@
 import { LoginProps, LoginResponse, RegisterProps, UserPayload } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import { getItemFromAsyncStorage, removeItemFromAsyncStorage, setItemToAsyncStorage } from "@/utils/asyncstorage";
+import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
 import { createContext, useState } from "react";
 
@@ -23,6 +24,7 @@ export interface AuthContextProps {
     logout: () => void;
     getUserInfo: () => Promise<void>;
     validateAuth: () => Promise<void>;
+    requestResetPassword: (userEmail: string) => Promise<boolean>;
 }
 
 export const AuthContext = createContext({} as AuthContextProps);
@@ -132,6 +134,20 @@ export const AuthProvider = ({children}: any) => {
         router.replace("/login");
     }
     
+    const requestResetPassword = async(email: string) => {
+        try {
+            console.log('Solicitando request de password')
+            const { data } = await moodTrackedApi.post('/users/auth/reset-password', { email });
+            return true;
+        } catch (error: any | AxiosError) {
+            console.log('Ocurrió un error al solicitar request de password')
+            console.log(error)
+            if( error instanceof AxiosError ) {
+                console.log( error.response?.data )
+            }
+            return false;
+        }
+    }
 
     return (
         <AuthContext.Provider
@@ -141,7 +157,8 @@ export const AuthProvider = ({children}: any) => {
                 registerUser,
                 logout,
                 getUserInfo,
-                validateAuth
+                validateAuth,
+                requestResetPassword
             }}
         >
             {children}

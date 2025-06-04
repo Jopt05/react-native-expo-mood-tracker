@@ -1,13 +1,23 @@
 import { AuthContext } from "@/context/Auth.context";
 import { Ionicons } from "@expo/vector-icons";
 import { useContext, useState } from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Platform, Text, ToastAndroid, TouchableOpacity, View } from "react-native";
 
 export default function HeaderComponent() {
 
-  const { authState, logout } = useContext( AuthContext );
+  const { authState, logout, requestResetPassword } = useContext( AuthContext );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleResetPassword = async() => {
+    if (!authState.userData) return;
+    const resetSuccessful = await requestResetPassword(authState.userData.email);
+    if( Platform.OS === 'android' && resetSuccessful ) {
+      console.log(1)
+      ToastAndroid.show('Password was successfully reset', ToastAndroid.SHORT)
+    }
+    setIsModalOpen(false);
+  }
 
   return (
     <View
@@ -23,15 +33,24 @@ export default function HeaderComponent() {
           {
             (isModalOpen) && (    
               <View
-                className="absolute top-5 right-0 bg-[#44446f] py-2 px-4 rounded-lg z-20"
+                className="flex absolute top-5 right-0 bg-[#44446f] py-2 px-4 rounded-lg z-20"
               >
                 <TouchableOpacity
                   onPress={() => logout()}
                 >
                   <Text
-                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl"
+                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl text-center py-1"
                   >
                     Logout
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleResetPassword()}
+                >
+                  <Text
+                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl text-center py-1"
+                  >
+                    Reset password
                   </Text>
                 </TouchableOpacity>
               </View>
