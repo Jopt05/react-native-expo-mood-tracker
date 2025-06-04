@@ -13,7 +13,7 @@ import { Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 
 
 export default function HomeScreen() {
 
-    const { authState, validateAuth } = useContext( AuthContext );
+    const { authState, getUserInfo } = useContext( AuthContext );
 
     const { 
         moodsList, 
@@ -31,8 +31,8 @@ export default function HomeScreen() {
     const [isRefreshing, setisRefreshing] = useState(false);
 
     useEffect(() => {
-        if( authState.userData ) return; 
-        validateAuth();
+        if( authState.userData ) return
+        getUserInfo()
         getMoods()
         getAdvice();
     }, [authState.isLoggedIn])
@@ -46,6 +46,7 @@ export default function HomeScreen() {
     const handleRefresh = async() => {
         setisRefreshing(true);
         await getMoods();
+        await getAdvice();
         setisRefreshing(false);
     }
     

@@ -1,18 +1,28 @@
 import { AuthContext } from "@/context/Auth.context";
-import { Redirect, useFocusEffect } from "expo-router";
-import { useCallback, useContext } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { Redirect } from "expo-router";
+import { useContext, useEffect, useRef } from "react";
+import { ActivityIndicator, AppState, View } from "react-native";
 
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
-  const { authState, validateAuth } = useContext( AuthContext );
+  const { authState, validateAuth, getUserInfo } = useContext( AuthContext );
+  const appState = useRef(AppState.currentState);
 
-  useFocusEffect(
-    useCallback(() => {
-      validateAuth()
-    }, [])
-  )
+  useEffect(() => {
+    console.log(authState)
+     const subscription = AppState.addEventListener("change", nextAppState => {
+      console.log("App State changed to", nextAppState);
+      appState.current = nextAppState;
+      if( nextAppState == 'active' ) {
+        getUserInfo();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   if (authState.isLoadingAuthState) {
     return (

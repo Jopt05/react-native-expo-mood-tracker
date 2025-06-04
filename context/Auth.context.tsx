@@ -2,7 +2,7 @@ import { LoginProps, LoginResponse, RegisterProps, UserPayload } from "@/apis/mo
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import { getItemFromAsyncStorage, removeItemFromAsyncStorage, setItemToAsyncStorage } from "@/utils/asyncstorage";
 import { useRouter } from "expo-router";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useState } from "react";
 
 export interface AuthState {
     isLoggedIn: boolean;
@@ -13,7 +13,7 @@ export interface AuthState {
 
 export const initialAuthState: AuthState = {
     isLoggedIn: false,
-    isLoadingAuthState: false,
+    isLoadingAuthState: true,
 }
 
 export interface AuthContextProps {
@@ -21,6 +21,7 @@ export interface AuthContextProps {
     login: (loginData: LoginProps) => Promise<Boolean>;
     registerUser: (registerData: RegisterProps) => Promise<boolean>;
     logout: () => void;
+    getUserInfo: () => Promise<void>;
     validateAuth: () => Promise<void>;
 }
 
@@ -30,30 +31,59 @@ export const AuthProvider = ({children}: any) => {
 
     const router = useRouter();
     const [authState, setauthState] = useState(initialAuthState);
-    
-    useEffect(() => {
-      validateAuth()
-    }, [])
-    
+
     const validateAuth = async() => {
-        if( authState.isLoadingAuthState || authState.userData ) return; 
         console.log('Validando auth de usuario')
-        try {
+        setauthState({
+            ...authState,
+            isLoadingAuthState: true,
+        })
+        const token = await getItemFromAsyncStorage('authToken');
+        if( !token ) {
             setauthState({
                 isLoggedIn: false,
-                isLoadingAuthState: true,
+                isLoadingAuthState: false,
             })
+            return;
+        }
+        try {
+            const { data } = await moodTrackedApi.get('/users', { headers: { 'Authorization': `Bearer ${token}` }});
+            setauthState({
+                ...authState,
+                isLoggedIn: true,
+                isLoadingAuthState: false,
+            })
+            console.log('Auth vigente')
+        } catch (error) {
+            console.log('Error al validar auth')
+            console.log(error)
+            setauthState({
+                isLoggedIn: false,
+                isLoadingAuthState: false,
+            })
+        }
+    }
+    
+    const getUserInfo = async() => {
+        console.log('Obteniendo información de usuario')
+        setauthState({
+            ...authState,
+            isLoadingAuthState: true,
+        })
+        try {
             const token = await getItemFromAsyncStorage('authToken');
             if( !token ) {
-                router.replace("/login");
+                console.log('No existe token en storage')
                 return;
             }
             const { data } = await moodTrackedApi.get('/users', { headers: { 'Authorization': `Bearer ${token}` }});
             setauthState({
+                ...authState,
                 isLoggedIn: true,
                 userData: data.payload,
                 isLoadingAuthState: false,
             })
+            console.log('Información obtenida')
         } catch (error) {
             console.log(`Ocurrio un error en getCurrentUser: ${error}`)
             console.log(error)
@@ -61,7 +91,6 @@ export const AuthProvider = ({children}: any) => {
                 isLoggedIn: false,
                 isLoadingAuthState: false,
             })
-            router.replace("/login");
         }
     }
 
@@ -70,6 +99,7 @@ export const AuthProvider = ({children}: any) => {
             const { data } = await moodTrackedApi.post<LoginResponse>('/users/login', loginData);
             await setItemToAsyncStorage('authToken', data.payload.token);
             setauthState({
+                ...authState,
                 isLoggedIn: true,
                 token: data.payload.token,
                 isLoadingAuthState: false
@@ -110,6 +140,7 @@ export const AuthProvider = ({children}: any) => {
                 login,
                 registerUser,
                 logout,
+                getUserInfo,
                 validateAuth
             }}
         >
