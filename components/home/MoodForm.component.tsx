@@ -219,6 +219,7 @@ export default function ModalFormComponent(props: ModalComponentProps) {
                                     className="flex flex-1 text-2xl bg-[#505194] text-[#f5f5ff] font-[Montserrat-regular]"
                                     onChangeText={(value) => onChange(value, 'reflection')}
                                     value={reflection}
+                                    multiline
                                 />
                             </View>
                         )

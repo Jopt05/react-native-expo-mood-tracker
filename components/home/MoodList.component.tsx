@@ -1,11 +1,10 @@
 import { GetMoodsResponse, Mood } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
-import { getItemFromAsyncStorage } from "@/utils/asyncstorage";
 import { moodToImage, sleepToText } from "@/utils/mood";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Modal, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Image, Modal, Text, TouchableOpacity, View } from "react-native";
 
 interface ModalComponentProps {
     visible: boolean;
@@ -20,17 +19,18 @@ export default function MoodListComponent(props: ModalComponentProps) {
         page: 1,
         total: 0
     })
+
+    useEffect(() => {
+        if( !props.visible ) return; 
+        getMoods()
+    }, [props.visible])
     
-    const getMoods = async() => {
-        setPagingData({
-            ...pagingData,
-            isLoading: true
-        })
+    const getMoods = async(page = 1) => {
         try {
             const token = await AsyncStorage.getItem('authToken');
             if( !token ) return;
-            const { data } = await moodTrackedApi.get<GetMoodsResponse>(`/moods?page=1`, { headers: { Authorization: `Bearer ${token}`} });
-            setMoodsList(data.payload.mood);
+            const { data } = await moodTrackedApi.get<GetMoodsResponse>(`/moods?page=${page}`, { headers: { Authorization: `Bearer ${token}`} });
+            setMoodsList([...moodsList, ...data.payload.mood]);
             setPagingData({
                 isLoading: false,
                 page: data.payload.page,
@@ -46,53 +46,33 @@ export default function MoodListComponent(props: ModalComponentProps) {
         }
     }
 
-    const getMoreMoods = async(page = 1) => {
-        setPagingData({
-            ...pagingData,
-            isLoading: true
-        })
-        try {
-            const token = await getItemFromAsyncStorage('authToken');
-            if( !token ) return;
-            const { data } = await moodTrackedApi.get<GetMoodsResponse>(`/moods?page=${page}`, { headers: { Authorization: `Bearer ${token}`} });
-            setMoodsList([...moodsList, ...data.payload.mood]);
-            setPagingData({
-                ...pagingData,
-                isLoading: false,
-                page: data.payload.page
-            })
-        } catch (error) {
-            console.log('Ocurrió un error al obtener moods')
-            console.log(error)
-            setPagingData({
-                ...pagingData,
-                isLoading: false
-            })
-        }
-    }
-
-    const handleEndReached = () => {
+    const handleEndReached = async() => {
+        if( pagingData.isLoading ) return
         if( moodsList.length >= pagingData.total ) return;
         setPagingData({
             ...pagingData,
             isLoading: true,
             page: pagingData.page + 1
         });
-        getMoreMoods(pagingData.page + 1)
+        await getMoods(pagingData.page + 1)
     }
 
-    useEffect(() => {
-        if( !props.visible ) return; 
-        getMoods()
-    }, [props.visible])
-    
+    const handleClose = async() => {
+        setMoodsList([]);
+        setPagingData({
+            isLoading: true,
+            page: 1,
+            total: 0
+        })
+        props.onClose();
+    }
 
     return (
         <Modal
             animationType="slide"
             transparent={true}
             visible={props.visible}
-            onRequestClose={props.onClose}
+            onRequestClose={() => handleClose()}
         >
             <View
                 className="flex flex-1 relative justify-center items-center z-20"
@@ -108,7 +88,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
                         height: '100%',
                         zIndex: 20
                     }}
-                    onPress={() => props.onClose()}
+                    onPress={() => handleClose()}
                 ></TouchableOpacity>
                 <View
                     style={{
@@ -129,19 +109,24 @@ export default function MoodListComponent(props: ModalComponentProps) {
                         }}
                         onEndReachedThreshold={ 0.5 }
                         ListFooterComponent={() => (
-                                (pagingData.isLoading) && (
-                                    <ActivityIndicator 
-                                        className="flex justify-center mt-2"
-                                        size="large"
-                                    />
-                                ),
-                                (!pagingData.isLoading && moodsList.length == pagingData.total) && (
+                                <>
+                                {
+                                    (pagingData.isLoading) && (
+                                        <Text>
+                                            Holaaa
+                                        </Text>
+                                    )
+                                }
+                                {
+                                    (!pagingData.isLoading && moodsList.length == pagingData.total) && (
                                     <Text
                                         className="text-[#f5f5ff] font-[Montserrat-regular] text-center mt-2"
                                     >
                                         No more moods to show
                                     </Text>
                                 )
+                                }
+                                </>
                         )}  
                         renderItem={({item}) => {
                                 return (
