@@ -1,10 +1,11 @@
 import { GetMoodsResponse, Mood } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
+import { ThemeContext } from "@/context/Theme.context";
 import { moodToImage, sleepToText } from "@/utils/mood";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
-import { FlatList, Image, Modal, Text, TouchableOpacity, View } from "react-native";
+import { useContext, useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Image, Modal, Text, TouchableOpacity, View } from "react-native";
 
 interface ModalComponentProps {
     visible: boolean;
@@ -12,6 +13,8 @@ interface ModalComponentProps {
 }
 
 export default function MoodListComponent(props: ModalComponentProps) {
+
+    const { theme } = useContext( ThemeContext );
 
     const [moodsList, setMoodsList] = useState<Mood[]>([]);
     const [pagingData, setPagingData] = useState({
@@ -93,12 +96,16 @@ export default function MoodListComponent(props: ModalComponentProps) {
                 <View
                     style={{
                         width: '90%',
-                        maxHeight: 450
+                        maxHeight: 450,
+                        backgroundColor: theme.colors.background
                     }}
-                    className="flex flex-col bg-[#44446f] rounded-xl py-4 px-4 z-30"
+                    className="flex flex-col rounded-xl py-4 px-4 z-30"
                 >
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-bold] text-3xl text-center"
+                        className="font-[Montserrat-bold] text-3xl text-center"
+                        style={{
+                            color: theme.colors.primary
+                        }}
                     >
                         Your previous check ins
                     </Text>
@@ -112,15 +119,19 @@ export default function MoodListComponent(props: ModalComponentProps) {
                                 <>
                                 {
                                     (pagingData.isLoading) && (
-                                        <Text>
-                                            Holaaa
-                                        </Text>
+                                        <ActivityIndicator 
+                                            className="mt-2"
+                                            size="large"
+                                        />
                                     )
                                 }
                                 {
                                     (!pagingData.isLoading && moodsList.length == pagingData.total) && (
                                     <Text
-                                        className="text-[#f5f5ff] font-[Montserrat-regular] text-center mt-2"
+                                        className="font-[Montserrat-regular] text-center mt-2"
+                                        style={{
+                                            color: theme.colors.primary
+                                        }}
                                     >
                                         No more moods to show
                                     </Text>
@@ -131,10 +142,17 @@ export default function MoodListComponent(props: ModalComponentProps) {
                         renderItem={({item}) => {
                                 return (
                                     <View
-                                        className="flex flex-col px-4 py-4 mt-2 bg-[#3a3a59]"
+                                        className="flex flex-col px-4 py-4 mt-2"
+                                        style={{
+                                            backgroundColor: theme.colors.card,
+                                            borderRadius: 10
+                                        }}
                                     >
                                         <Text
-                                            className="text-[#f5f5ff] font-[Montserrat-regular] text-lg"
+                                            className="font-[Montserrat-regular] text-lg"
+                                            style={{
+                                                color: theme.colors.primary
+                                            }}
                                         >
                                             { new Date(item.createdAt).toDateString() }
                                         </Text>
@@ -147,7 +165,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
                                                 <Ionicons 
                                                     name="happy-outline"
                                                     size={25}
-                                                    color="#f5f5ff"
+                                                    color={theme.colors.text}
                                                 />
                                                 <Image 
                                                     className="w-10 h-10"
@@ -160,10 +178,13 @@ export default function MoodListComponent(props: ModalComponentProps) {
                                                 <Ionicons 
                                                     name="bed-outline"
                                                     size={25}
-                                                    color="#f5f5ff"
+                                                    color={theme.colors.text}
                                                 />
                                                 <Text
-                                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-lg"
+                                                    className="font-[Montserrat-regular] text-lg"
+                                                    style={{
+                                                        color: theme.colors.primary
+                                                    }}
                                                 >
                                                     { sleepToText(item.sleep) } hours
                                                 </Text>
@@ -174,13 +195,14 @@ export default function MoodListComponent(props: ModalComponentProps) {
                                                 <Ionicons 
                                                     name="cloud-outline"
                                                     size={25}
-                                                    color="#f5f5ff"
+                                                    color={theme.colors.text}
                                                 />
                                                 <Text
-                                                    className="flex text-right text-[#f5f5ff] font-[Montserrat-regular] text-sm"
+                                                    className="flex text-right font-[Montserrat-regular] text-sm"
                                                     style={{
                                                         width: '60%',
-                                                        marginLeft: 'auto'
+                                                        marginLeft: 'auto',
+                                                        color: theme.colors.primary
                                                     }}
                                                 >
                                                     { item.reflection || 'No reflection this day' }

@@ -4,6 +4,7 @@ import ModalFormComponent from "@/components/home/MoodForm.component";
 import MoodListComponent from "@/components/home/MoodList.component";
 import ProtectedRoute from "@/components/shared/ProtectedRoute.component";
 import { AuthContext } from "@/context/Auth.context";
+import { ThemeContext } from "@/context/Theme.context";
 import { useAdvice } from "@/hooks/useAdvice.hook";
 import { useMood } from "@/hooks/useMood.hook";
 import { moodToImage, moodToText, sleepToText } from "@/utils/mood";
@@ -14,6 +15,7 @@ import { Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 
 export default function HomeScreen() {
 
     const { authState, getUserInfo } = useContext( AuthContext );
+    const { theme } = useContext( ThemeContext );
 
     const { 
         moodsList, 
@@ -71,17 +73,23 @@ export default function HomeScreen() {
                 visible={isMoodsModalOpen}
             />
             <Text
-                className="text-center text-3xl mt-10 mb-7 text-[#f5f5ff] font-[Montserrat-bold]"
+                className="text-center text-3xl mt-10 mb-7 font-[Montserrat-bold]"
+                style={{
+                    color: theme.colors.primary
+                }}
             >
                 Hello, { authState.userData?.name || 'User' }!
             </Text>
             <Text
-                className="text-center text-4xl text-[#f5f5ff] font-[Montserrat-bold]"
+                className="text-center text-4xl font-[Montserrat-bold]"
+                style={{
+                    color: theme.colors.primary
+                }}
             >
                 How are you feeling today?
             </Text>
             <Text
-                className="text-center text-xl text-[#d1cfe0] font-[Montserrat-thin] mt-8"
+                className="text-center text-xl text-[#716f85] font-[Montserrat-thin] mt-8"
             >
                 { currentDate.toDateString() }
             </Text>
@@ -92,11 +100,17 @@ export default function HomeScreen() {
                             className="flex flex-row justify-center mt-14"
                         >
                             <TouchableOpacity
-                                className="bg-[#505194] py-6 px-12 rounded-md"
+                                className="py-6 px-12 rounded-md"
+                                style={{
+                                    backgroundColor: theme.colors.notification
+                                }}
                                 onPress={() => setIsModalOpen(true)}
                             >
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-bold] text-xl"
+                                    className=" font-[Montserrat-bold] text-xl"
+                                    style={{
+                                        color: (theme.dark) ? theme.colors.primary : 'white'
+                                    }}
                                 >
                                     Log today's mood
                                 </Text>
@@ -109,7 +123,10 @@ export default function HomeScreen() {
                 (todaysMood) && (
                     <>
                         <View
-                            className="flex flex-row py-4 px-4 mt-20 bg-[#44446f] rounded-xl"
+                            className="flex flex-row py-4 px-4 mt-20 rounded-xl"
+                            style={{
+                                backgroundColor: theme.colors.card
+                            }}
                         >
                             <View
                                 style={{
@@ -118,17 +135,26 @@ export default function HomeScreen() {
                                 className="flex flex-col flex-1"
                             >
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl mb-2"
+                                    className="font-[Montserrat-regular] text-xl mb-2"
+                                    style={{
+                                        color: theme.colors.text
+                                    }}
                                 >
                                     I'm feeling
                                 </Text>
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-bold] text-3xl flex-1"
+                                    className="font-[Montserrat-bold] text-3xl flex-1"
+                                    style={{
+                                        color: theme.colors.primary
+                                    }}
                                 >
                                     { moodToText(todaysMood.mood) }
                                 </Text>
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm mt-6"
+                                    className="font-[Montserrat-regular] text-sm mt-6"
+                                    style={{
+                                        color: theme.colors.primary
+                                    }}
                                 >
                                     "{advice}"
                                 </Text>
@@ -143,39 +169,57 @@ export default function HomeScreen() {
                             </View>
                         </View>
                         <View
-                            className="flex flex-col py-4 px-4 mt-4 bg-[#44446f] rounded-xl"
+                            className="flex flex-col py-4 px-4 mt-4 rounded-xl"
+                            style={{
+                                backgroundColor: theme.colors.card
+                            }}
                         >
                             <View
                                 className="flex flex-row items-center gap-4"
                             >
-                                <Ionicons name="bed-outline" color="#f5f5ff" size={20} />
+                                <Ionicons name="bed-outline" color={theme.colors.primary} size={20} />
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl"
+                                    className=" font-[Montserrat-regular] text-xl"
+                                    style={{
+                                        color: theme.colors.primary
+                                    }}
                                 >
                                     Sleep
                                 </Text>
                             </View>
                             <Text
-                                className="text-[#f5f5ff] font-[Montserrat-bold] text-3xl mt-2"
+                                className=" font-[Montserrat-bold] text-3xl mt-2"
+                                style={{
+                                    color: theme.colors.primary
+                                }}
                             >
                                 { sleepToText(todaysMood.sleep) } hours
                             </Text>
                         </View>
                         <View
-                            className="flex flex-col py-4 px-4 mt-4 bg-[#44446f] rounded-xl"
+                            className="flex flex-col py-4 px-4 mt-4 rounded-xl"
+                            style={{
+                                backgroundColor: theme.colors.card
+                            }}
                         >
                             <View
                                 className="flex flex-row items-center gap-4"
                             >
-                                <Ionicons name="cloud-outline" color="#f5f5ff" size={20} />
+                                <Ionicons name="cloud-outline" color={ theme.colors.primary } size={20} />
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl"
+                                    className=" font-[Montserrat-regular] text-xl"
+                                    style={{
+                                        color: theme.colors.primary
+                                    }}
                                 >
                                     Reflection
                                 </Text>
                             </View>
                             <Text
-                                className="text-[#f5f5ff] font-[Montserrat-regular] text-sm mt-8"
+                                className=" font-[Montserrat-regular] text-sm mt-8"
+                                style={{
+                                    color: theme.colors.text
+                                }}
                             >
                                 { todaysMood.reflection || "No reflection this day" }
                             </Text>
@@ -184,37 +228,52 @@ export default function HomeScreen() {
                 )
             }
             <View
-                className="flex flex-col py-4 px-4 mt-4 bg-[#44446f] rounded-xl"
+                className="flex flex-col py-4 px-4 mt-4 rounded-xl"
+                style={{
+                    backgroundColor: theme.colors.card
+                }}
             >
                 <View
                     className="flex flex-row items-center gap-2"
                 >
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-bold] text-xl"
+                        className=" font-[Montserrat-bold] text-xl"
+                        style={{
+                            color: theme.colors.primary
+                        }}
                     >
                         Average mood
                     </Text>
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-regular] text-sm"
+                        className=" font-[Montserrat-regular] text-sm"
+                        style={{
+                            color: theme.colors.text
+                        }}
                     >
                         (Last { moodsList.length } check-ins)
                     </Text>
                 </View>
                 <TouchableOpacity
                     onPress={() => setIsMoodsModalOpen(true)}   
-                    className="flex flex-col py-8 px-5 bg-[#6e6e99] mt-2 rounded-xl"
+                    className="flex flex-col py-8 px-5 mt-2 rounded-xl"
+                    style={{
+                        backgroundColor: (theme.dark) ? '#6e6e99' : '#89ccff'
+                    }}
                 >
                     <View
                         className="flex flex-row items-center"
                     >
                         <Text
-                            className="flex-1 text-2xl text-[#f5f5ff] font-[Montserrat-bold] mb-4"
+                            className="flex-1 text-2xl  font-[Montserrat-bold] mb-4"
+                            style={{
+                                color: theme.colors.primary
+                            }}
                         >
                             { moodToText(averageMood || '') }
                         </Text>
                         <Ionicons 
                             name="information-circle-outline"
-                            color="#f5f5ff"
+                            color={theme.colors.primary}
                             size={20}
                         />
                     </View>
@@ -223,11 +282,14 @@ export default function HomeScreen() {
                     >
                         <Ionicons 
                             name="arrow-forward-outline" 
-                            color="#f5f5ff"
+                            color={theme.colors.primary}
                             size={10}
                         />
                         <Text
-                            className="text-[#f5f5ff] font-[Montserrat-regular] text-sm text-wrap"
+                            className=" font-[Montserrat-regular] text-sm text-wrap"
+                            style={{
+                                color: theme.colors.primary
+                            }}
                         >
                             Predominant mood from the past { moodsList.length } check-ins
                         </Text>
@@ -237,21 +299,33 @@ export default function HomeScreen() {
                     className="flex flex-row items-center gap-2 mt-5"
                 >
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-bold] text-xl"
+                        className=" font-[Montserrat-bold] text-xl"
+                        style={{
+                            color: theme.colors.primary
+                        }}
                     >
                         Average sleep
                     </Text>
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-regular] text-sm"
+                        className=" font-[Montserrat-regular] text-sm"
+                        style={{
+                            color: theme.colors.text
+                        }}
                     >
                         (Last { moodsList.length } check-ins)
                     </Text>
                 </View>
                 <View   
                     className="flex flex-col py-8 px-5 bg-[#6e6e99] mt-2 rounded-xl"
+                    style={{
+                        backgroundColor: (theme.dark) ? '#6e6e99' : '#4865db'
+                    }}
                 >
                     <Text
-                        className="text-2xl text-[#f5f5ff] font-[Montserrat-bold] mb-4"
+                        className="text-2xl  font-[Montserrat-bold] mb-4"
+                        style={{
+                            color: (theme.dark ? theme.colors.primary : 'white')
+                        }}
                     >
                         { sleepToText(averageSleepSchedule || '') } hours
                     </Text>
@@ -260,11 +334,14 @@ export default function HomeScreen() {
                     >
                         <Ionicons 
                             name="arrow-forward-outline" 
-                            color="#f5f5ff"
+                            color={(theme.dark ? theme.colors.primary : 'white')}
                             size={10}
                         />
                         <Text
-                            className="text-[#f5f5ff] font-[Montserrat-regular] text-sm text-wrap"
+                            className=" font-[Montserrat-regular] text-sm text-wrap"
+                            style={{
+                                color: (theme.dark ? theme.colors.primary : 'white')
+                            }}
                         >
                             Predominant sleep schedule from the past { moodsList.length } check-ins
                         </Text>
@@ -282,7 +359,10 @@ export default function HomeScreen() {
                 className="flex flex-row justify-center my-8"
             >
                 <Text
-                    className="text-[#f5f5ff] font-[Montserrat-thin] text-sm"
+                    className=" font-[Montserrat-thin] text-sm"
+                    style={{
+                        color: theme.colors.primary
+                    }}
                 >
                     Developed by Jesús Puentes
                 </Text>

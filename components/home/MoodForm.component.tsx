@@ -1,8 +1,9 @@
 import { CreateMoodResponse, Mood } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
+import { ThemeContext } from "@/context/Theme.context";
 import { useForm } from "@/hooks/useForm.hook";
 import { getItemFromAsyncStorage } from "@/utils/asyncstorage";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { ActivityIndicator, Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 interface ModalComponentProps {
@@ -34,6 +35,8 @@ const STEP_TEXTS = [
 ]
 
 export default function ModalFormComponent(props: ModalComponentProps) {
+
+    const { theme } = useContext( ThemeContext )
 
     const [currentStep, setCurrentStep] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
@@ -112,11 +115,15 @@ export default function ModalFormComponent(props: ModalComponentProps) {
                 <View
                     style={{
                         width: '90%',
+                        backgroundColor: theme.colors.card
                     }}
-                    className="flex flex-col bg-[#44446f] rounded-xl py-4 px-4 z-20"
+                    className="flex flex-col rounded-xl py-4 px-4 z-20"
                 >
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-bold] text-3xl text-center"
+                        className="font-[Montserrat-bold] text-3xl text-center"
+                        style={{
+                            color: theme.colors.primary
+                        }}
                     >
                         Log your mood
                     </Text>
@@ -126,26 +133,26 @@ export default function ModalFormComponent(props: ModalComponentProps) {
                         <View
                             className="flex flex-1 h-1"
                             style={{
-                                backgroundColor: (currentStep === 0) ? '#20214f' : '#ffff'
+                                backgroundColor: (currentStep === 0) ? '#20214f' : theme.colors.background
                             }}
                         ></View>
                         <View
                             className="flex flex-1 h-1"
                             style={{
-                                backgroundColor: (currentStep === 1) ? '#20214f' : '#ffff'
+                                backgroundColor: (currentStep === 1) ? '#20214f' : theme.colors.background
                             }}
                         ></View>
                         <View
                             className="flex flex-1 h-1"
                             style={{
-                                backgroundColor: (currentStep === 2) ? '#20214f' : '#ffff'
+                                backgroundColor: (currentStep === 2) ? '#20214f' : theme.colors.background
                             }}
                         ></View>
                     </View>
                     <Text
                         className={`font-[Montserrat-regular] text-center mt-6 text-2xl`}
                         style={{
-                            color: (hasError) ? '#ff0000' : '#f5f5ff'
+                            color: (hasError) ? '#ff0000' : theme.colors.primary
                         }}
                     >
                         { STEP_TEXTS[currentStep] }
@@ -161,14 +168,18 @@ export default function ModalFormComponent(props: ModalComponentProps) {
                                             key={key}
                                         >
                                             <View
-                                                className="flex flex-row py-4 px-4 bg-[#505194]"
+                                                className="flex flex-row py-4 px-4"
                                                 style={{
                                                     borderWidth: 1,
-                                                    borderColor: (mood === answer.key) ? '#f5f5ff' : 'transparent'
+                                                    borderColor: (mood === answer.key) ? 'grey' : 'transparent',
+                                                    backgroundColor: theme.colors.background
                                                 }}
                                             >
                                                 <Text
-                                                    className="text-2xl text-[#f5f5ff] font-[Montserrat-regular]"
+                                                    className="text-2xl font-[Montserrat-regular]"
+                                                    style={{
+                                                        color: theme.colors.primary
+                                                    }}
                                                 >
                                                     { answer.value }
                                                 </Text>
@@ -193,11 +204,15 @@ export default function ModalFormComponent(props: ModalComponentProps) {
                                                 className="flex flex-row py-4 px-4 bg-[#505194]"
                                                 style={{
                                                     borderWidth: 1,
-                                                    borderColor: (sleep === answer.key) ? '#f5f5ff' : 'transparent'
+                                                    borderColor: (sleep === answer.key) ? 'grey' : 'transparent',
+                                                    backgroundColor: theme.colors.background
                                                 }}
                                             >
                                                 <Text
-                                                    className="text-2xl text-[#f5f5ff] font-[Montserrat-regular]"
+                                                    className="text-2xl font-[Montserrat-regular]"
+                                                    style={{
+                                                        color: theme.colors.primary
+                                                    }}
                                                 >
                                                     { answer.value } hours
                                                 </Text>
@@ -216,7 +231,11 @@ export default function ModalFormComponent(props: ModalComponentProps) {
                                 <TextInput
                                     autoCorrect={false}
                                     autoCapitalize="none"
-                                    className="flex flex-1 text-2xl bg-[#505194] text-[#f5f5ff] font-[Montserrat-regular]"
+                                    className="flex flex-1 text-2xl font-[Montserrat-regular]"
+                                    style={{
+                                        color: theme.colors.primary,
+                                        backgroundColor: theme.colors.background,
+                                    }}
                                     onChangeText={(value) => onChange(value, 'reflection')}
                                     value={reflection}
                                     multiline

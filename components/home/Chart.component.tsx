@@ -1,7 +1,8 @@
 import { Mood } from "@/apis/mood-tracker/interfaces";
+import { ThemeContext } from "@/context/Theme.context";
 import { formatMoodToChartColor, moodToText, numberToSleep, sleepToNumber } from "@/utils/mood";
 import { useFont } from "@shopify/react-native-skia";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { Bar, CartesianChart } from "victory-native";
 
@@ -25,6 +26,8 @@ const Montserrat = require('../../assets/fonts/Montserrat-Regular.ttf')
 
 export default function ChartComponent(props: ChartComponentProps) {
 
+    const { theme } = useContext( ThemeContext );
+
     const font = useFont(Montserrat, 12);
     const [charData, setChartData] = useState<ChartDataState>({
         isLoading: true,
@@ -41,10 +44,16 @@ export default function ChartComponent(props: ChartComponentProps) {
 
     return (
         <View
-            className="flex flex-col py-4 px-4 mt-4 bg-[#44446f] rounded-xl"
+            className="flex flex-col py-4 px-4 mt-4 rounded-xl"
+            style={{
+                backgroundColor: theme.colors.card
+            }}
         >
           <Text
-            className="text-[#f5f5ff] font-[Montserrat-bold] text-xl"
+            className="font-[Montserrat-bold] text-xl"
+            style={{
+              color: theme.colors.primary
+            }}
           >
             Moods and sleep trends
           </Text>
@@ -73,7 +82,7 @@ export default function ChartComponent(props: ChartComponentProps) {
                   formatYLabel(value) {
                     return numberToSleep(value);
                   },
-                  labelColor: 'white',
+                  labelColor: theme.colors.primary,
                   tickValues: {
                     y: [0,1,2,3,4,5],
                     x: charData.data.map((m, index) => index + 1)
@@ -127,7 +136,10 @@ export default function ChartComponent(props: ChartComponentProps) {
                   key={i}
                 >
                   <Text
-                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm"
+                    className="font-[Montserrat-regular] text-sm"
+                    style={{
+                      color: theme.colors.primary
+                    }}
                   >
                     { moodToText(m) }
                   </Text>

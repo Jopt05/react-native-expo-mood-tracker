@@ -1,11 +1,14 @@
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
+import { ThemeContext } from "@/context/Theme.context";
 import { useForm } from "@/hooks/useForm.hook";
 import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function ResetPasswordPage() {
+
+    const { theme } = useContext( ThemeContext );
 
     const router = useRouter();
     const [errorMessage, setErrorMessage] = useState("");
@@ -46,26 +49,39 @@ export default function ResetPasswordPage() {
             className="flex flex-1 justify-center items-center"
         >
             <View
-                className="flex flex-col w-80 bg-[#44446f] rounded-sm"
+                className="flex flex-col w-80 rounded-sm"
+                style={{
+                    backgroundColor: theme.colors.card
+                }}
             >
                 <View
                     className="flex flex-col py-4 px-4"
                 >
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-bold] text-2xl text-center mb-4"
+                        className="font-[Montserrat-bold] text-2xl text-center mb-4"
+                        style={{
+                            color: theme.colors.primary
+                        }}
                     >
                         Reset your password
                     </Text>
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-regular] text-sm mb-2"
+                        className="font-[Montserrat-regular] text-sm mb-2"
+                        style={{
+                            color: theme.colors.primary
+                        }}
                     >
                         Email
                     </Text>
                     <TextInput 
-                        className="bg-[#505194] rounded-sm py-2 px-4 mt-2 font-[Montserrat-regular] text-[#f5f5ff]"
+                        className="rounded-sm py-2 px-4 mt-2 font-[Montserrat-regular]"
+                        style={{
+                            color: theme.colors.primary,
+                            backgroundColor: theme.colors.background
+                        }}
                         placeholder="Your email here"
                         autoCapitalize="none"
-                        placeholderTextColor="#f5f5ff"
+                        placeholderTextColor={theme.colors.text}
                         value={email}
                         onChangeText={(value) => onChange(value, 'email')}
                     />
@@ -93,10 +109,16 @@ export default function ResetPasswordPage() {
                     onPress={() => handleSubmit()}
                 >
                     <View
-                        className="py-2 px-10 bg-[#505194] rounded-sm"
+                        className="py-2 px-10 rounded-sm"
+                        style={{
+                            backgroundColor: theme.colors.notification
+                        }}
                     >
                         <Text
-                            className="text-[#f5f5ff] font-[Montserrat-bold] text-xl"
+                            className="font-[Montserrat-bold] text-xl"
+                            style={{
+                                color: (theme.dark) ? theme.colors.primary : 'white'
+                            }}
                         >
                             Confirm
                         </Text>

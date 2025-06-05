@@ -76,6 +76,10 @@ export const AuthProvider = ({children}: any) => {
             const token = await getItemFromAsyncStorage('authToken');
             if( !token ) {
                 console.log('No existe token en storage')
+                setauthState({
+                    isLoggedIn: false,
+                    isLoadingAuthState: false,
+                })
                 return;
             }
             const { data } = await moodTrackedApi.get('/users', { headers: { 'Authorization': `Bearer ${token}` }});

@@ -1,4 +1,5 @@
 import { AuthContext } from "@/context/Auth.context";
+import { ThemeContext } from "@/context/Theme.context";
 import { Ionicons } from "@expo/vector-icons";
 import { useContext, useState } from "react";
 import { Image, Platform, Text, ToastAndroid, TouchableOpacity, View } from "react-native";
@@ -6,6 +7,7 @@ import { Image, Platform, Text, ToastAndroid, TouchableOpacity, View } from "rea
 export default function HeaderComponent() {
 
   const { authState, logout, requestResetPassword } = useContext( AuthContext );
+  const { theme, setDarkTheme, setLightTheme }  = useContext( ThemeContext );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -13,33 +15,64 @@ export default function HeaderComponent() {
     if (!authState.userData) return;
     const resetSuccessful = await requestResetPassword(authState.userData.email);
     if( Platform.OS === 'android' && resetSuccessful ) {
-      console.log(1)
       ToastAndroid.show('Password was successfully reset', ToastAndroid.SHORT)
     }
     setIsModalOpen(false);
   }
 
+  const handleChangeTheme = async() => {
+    if( theme.dark ) {
+      await setLightTheme();
+    } else {
+      await setDarkTheme();
+    }
+  }
+
   return (
     <View
-        className="flex flex-row items-center py-4 bg-[#3a3a59]"
+        className="flex flex-row items-center py-4 gap-2"
+        style={{
+            backgroundColor: theme.colors.background
+        }}
     >
         <Text
-            className="text-[#f5f5ff] font-[Montserrat-bold] text-2xl flex-1"
+            className="font-[Montserrat-bold] text-2xl flex-1"
+            style={{
+                color: theme.colors.primary
+            }}
         >
             Mood Tracker
         </Text>
         <View
         >
+          <TouchableOpacity
+            onPress={handleChangeTheme}
+          >
+            <Ionicons 
+              name={ !theme.dark ? 'moon-outline' : "sunny-outline" }
+              size={24}
+              color={theme.colors.primary}
+            />
+          </TouchableOpacity>
+        </View>
+        <View
+        >
           {
             (isModalOpen) && (    
               <View
-                className="flex absolute top-5 right-0 bg-[#44446f] py-2 px-4 rounded-lg z-20"
+                className="flex absolute top-5 right-0 py-2 px-4 rounded-lg z-20"
+                style={{
+                  backgroundColor: theme.colors.card
+                }}
               >
                 <TouchableOpacity
                   onPress={() => logout()}
                 >
                   <Text
-                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl text-center py-1"
+                    className="font-[Montserrat-regular] text-xl text-center py-1"
+                    style={{
+                      color: theme.colors.primary
+                    }}
                   >
                     Logout
                   </Text>
@@ -48,7 +81,10 @@ export default function HeaderComponent() {
                   onPress={() => handleResetPassword()}
                 >
                   <Text
-                    className="text-[#f5f5ff] font-[Montserrat-regular] text-xl text-center py-1"
+                    className="font-[Montserrat-regular] text-xl text-center py-1"
+                    style={{
+                      color: theme.colors.primary
+                    }}
                   >
                     Reset password
                   </Text>
@@ -74,7 +110,7 @@ export default function HeaderComponent() {
               <Ionicons 
                 name="chevron-down"
                 size={12}
-                color={'#f5f5ff'}
+                color={theme.colors.primary}
               />
             </TouchableOpacity>
           )

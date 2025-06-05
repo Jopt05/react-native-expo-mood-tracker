@@ -1,4 +1,5 @@
 import { AuthContext } from "@/context/Auth.context";
+import { ThemeContext } from "@/context/Theme.context";
 import { useForm } from "@/hooks/useForm.hook";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -8,6 +9,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Text, TextInput, TouchableOpac
 export default function LoginScreen() {
 
     const { login, registerUser } = useContext( AuthContext );
+    const { theme } = useContext( ThemeContext );
     const router = useRouter();
 
     const [isRegistering, setIsRegistering] = useState(true);
@@ -90,26 +92,39 @@ export default function LoginScreen() {
         >
             
             <View
-                className="flex flex-col w-80 bg-[#44446f] rounded-sm"
+                className="flex flex-col w-80 rounded-sm"
+                style={{
+                    backgroundColor: theme.colors.card
+                }}
             >
                 <View
                     className="flex flex-col py-4 px-4"
                 >
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-bold] text-2xl text-center mb-4"
+                        className="font-[Montserrat-bold] text-2xl text-center mb-4"
+                        style={{
+                            color: theme.colors.primary
+                        }}
                     >
                         { (isRegistering) ? 'Register' : 'Login' }
                     </Text>
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-regular] text-sm mb-2"
+                        className="font-[Montserrat-regular] text-sm mb-2"
+                        style={{
+                            color: theme.colors.primary
+                        }}
                     >
                         Email
                     </Text>
                     <TextInput 
-                        className="bg-[#505194] rounded-sm py-2 px-4 mt-2 font-[Montserrat-regular] text-[#f5f5ff] mb-6"
+                        className="rounded-sm py-2 px-4 mt-2 font-[Montserrat-regular] mb-6"
+                        style={{
+                            color: theme.colors.primary,
+                            backgroundColor: theme.colors.background
+                        }}
                         placeholder="Your email here"
                         autoCapitalize="none"
-                        placeholderTextColor="#f5f5ff"
+                        placeholderTextColor={theme.colors.text}
                         value={email}
                         onChangeText={(value) => onChange(value, 'email')}
                     />
@@ -117,15 +132,22 @@ export default function LoginScreen() {
                         (isRegistering) && (
                             <>
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm mb-2"
+                                    className="font-[Montserrat-regular] text-sm mb-2"
+                                    style={{
+                                        color: theme.colors.primary
+                                    }}
                                 >
                                     Name
                                 </Text>
                                 <TextInput 
-                                    className="bg-[#505194] rounded-sm py-2 px-4 mt-2 font-[Montserrat-regular] text-[#f5f5ff] mb-8"
+                                    className="rounded-sm py-2 px-4 mt-2 font-[Montserrat-regular] mb-8"
+                                    style={{
+                                        color: theme.colors.primary,
+                                        backgroundColor: theme.colors.background
+                                    }}
                                     placeholder="Your name here"
                                     autoCapitalize="none"
-                                    placeholderTextColor="#f5f5ff"
+                                    placeholderTextColor={theme.colors.text}
                                     value={name}
                                     onChangeText={(value) => onChange(value, 'name')}
                                 />
@@ -133,19 +155,28 @@ export default function LoginScreen() {
                         )
                     }
                     <Text
-                        className="text-[#f5f5ff] font-[Montserrat-regular] text-sm mb-2"
+                        className="font-[Montserrat-regular] text-sm mb-2"
+                        style={{
+                            color: theme.colors.primary
+                        }}
                     >
                         Password
                     </Text>
                     <View
-                        className="flex flex-row items-center px-4 bg-[#505194] rounded-sm mb-4"
+                        className="flex flex-row items-center px-4 rounded-sm mb-4"
+                        style={{
+                            backgroundColor: theme.colors.background
+                        }}
                     >
                         <TextInput 
-                            className="flex flex-1 py-2 font-[Montserrat-regular] text-[#f5f5ff]"
+                            className="flex flex-1 py-2 font-[Montserrat-regular]"
+                            style={{
+                                color: theme.colors.primary
+                            }}
                             placeholder="Your password here"
                             autoCapitalize="none"
                             secureTextEntry={ (isShowingPassord) ? false : true }
-                            placeholderTextColor="#f5f5ff"
+                            placeholderTextColor={theme.colors.text}
                             value={password}
                             onChangeText={(value) => onChange(value, 'password')}
                         />
@@ -154,7 +185,7 @@ export default function LoginScreen() {
                         >
                             <Ionicons 
                                 name={ (isShowingPassord) ? 'eye' : "eye-off-outline" }
-                                color={"#f5f5ff"}
+                                color={theme.colors.text}
                                 size={15}
                             />
                         </TouchableOpacity>
@@ -182,10 +213,16 @@ export default function LoginScreen() {
                         onPress={ (isRegistering) ? handleRegister : handeLogin }
                     >
                         <View
-                            className="py-2 px-10 bg-[#505194] rounded-sm"
+                            className="py-2 px-10 rounded-sm"
+                            style={{
+                                backgroundColor: theme.colors.notification
+                            }}
                         >
                             <Text
-                                className="text-[#f5f5ff] font-[Montserrat-bold] text-xl"
+                                className="font-[Montserrat-bold] text-xl"
+                                style={{
+                                    color: (theme.dark) ? theme.colors.primary : 'white'
+                                }}
                             >
                                 { (isRegistering) ? 'Register' : 'Login' }
                             </Text>
@@ -204,7 +241,10 @@ export default function LoginScreen() {
                             <View
                             >
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm underline"
+                                    className="font-[Montserrat-regular] text-sm underline"
+                                    style={{
+                                        color: theme.colors.primary
+                                    }}
                                 >
                                     { (isRegistering) ? 'Already have an account?' : 'Don\'t have an account?' } 
                                 </Text>
@@ -220,7 +260,10 @@ export default function LoginScreen() {
                             <View
                             >
                                 <Text
-                                    className="text-[#f5f5ff] font-[Montserrat-regular] text-sm underline text-right"
+                                    className="font-[Montserrat-regular] text-sm underline text-right"
+                                    style={{
+                                        color: theme.colors.primary
+                                    }}
                                 >
                                     Forgot your password?
                                 </Text>
