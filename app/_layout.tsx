@@ -43,7 +43,7 @@ const RootLayout = () => {
           paddingTop: safeArea.top,
           paddingBottom: safeArea.bottom
         },
-        statusBarStyle: "dark",
+        statusBarStyle: (theme.dark) ? 'light' : 'dark',
         statusBarTranslucent: true
       }}
     />
