@@ -184,6 +184,22 @@ export default function MoodListComponent(props: ModalComponentProps) {
                             },
                             today: {
                                 backgroundColor: 'transparent'
+                            },
+                            button_prev: {
+                                backgroundColor: theme.colors.card,
+                                borderRadius: 10,
+                                color: 'red'
+                            },
+                            button_next: {
+                                backgroundColor: theme.colors.card,
+                                borderRadius: 10,
+                                color: 'red'
+                            },
+                            button_next_image: {
+                                tintColor: theme.colors.primary
+                            },
+                            button_prev_image: {
+                                tintColor: theme.colors.primary
                             }
                         }}
                     />
