@@ -4,8 +4,8 @@ import { ThemeContext } from "@/context/Theme.context";
 import { moodToImage, sleepToText } from "@/utils/mood";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useContext, useEffect, useState } from "react";
-import { Image, Modal, Text, TouchableOpacity, View } from "react-native";
+import { useContext, useEffect, useRef, useState } from "react";
+import { Image, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import DateTimePicker, { DateType, useDefaultStyles } from 'react-native-ui-datepicker';
 import DayfaceComponent from "./Dayface.component";
 
@@ -18,6 +18,8 @@ interface ModalComponentProps {
 export default function MoodListComponent(props: ModalComponentProps) {
 
     const { theme } = useContext( ThemeContext );
+
+    const scrollViewElement = useRef<ScrollView>(null);
 
     const [moodsList, setMoodsList] = useState<Mood[]>([]);
     const [pagingData, setPagingData] = useState({
@@ -39,6 +41,11 @@ export default function MoodListComponent(props: ModalComponentProps) {
         const plainDate = new Date(selected.toString()).setHours(0, 0, 0, 0);
         const mood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
         setSelectedMood(mood);
+        setTimeout(() => {
+            if( scrollViewElement.current ) {
+                scrollViewElement.current.scrollToEnd({ animated: true })
+            }
+        }, 100);
     }, [selected])
     
     
@@ -110,13 +117,14 @@ export default function MoodListComponent(props: ModalComponentProps) {
                     }}
                     onPress={() => handleClose()}
                 ></TouchableOpacity>
-                <View
+                <ScrollView
                     style={{
                         width: '90%',
-                        minHeight: 450,
-                        backgroundColor: theme.colors.background
+                        maxHeight: 450,
+                        backgroundColor: theme.colors.background,
                     }}
                     className="flex flex-col rounded-xl py-4 px-4 z-30"
+                    ref={scrollViewElement}
                 >
                     <Text
                         className="font-[Montserrat-bold] text-3xl text-center mb-2"
@@ -139,8 +147,6 @@ export default function MoodListComponent(props: ModalComponentProps) {
                                 const matchingMood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
                                 return <DayfaceComponent day={day} matchingMood={matchingMood} />
                             },
-                            IconPrev: <Ionicons onPress={() => handleEndReached()} name="arrow-back-outline" color={theme.colors.primary} size={20} />,
-                            IconNext: <Ionicons name="arrow-forward-outline" color={theme.colors.primary} size={20} />,
                         }}
                         disabledDates={(date) => {
                             const plainDate = new Date(date as Date).setHours(0, 0, 0, 0);
@@ -187,7 +193,8 @@ export default function MoodListComponent(props: ModalComponentProps) {
                                 className="flex flex-col px-4 py-4"
                                 style={{
                                     backgroundColor: theme.colors.card,
-                                    borderRadius: 10
+                                    borderRadius: 10,
+                                    ...(selectedMood ? { marginBottom: 40 } : {})
                                 }}
                             >
                                 <Text
@@ -254,7 +261,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
                             </View>
                         )
                     }
-                </View>
+                </ScrollView>
             </View>
         </Modal>
     )
