@@ -23,11 +23,25 @@ export default function HeaderComponent() {
 
   return (
     <View
-        className="flex flex-row items-center py-4 gap-2"
+        className="flex flex-row items-center py-4 gap-2 px-[25]"
         style={{
             backgroundColor: theme.colors.background
         }}
     >
+        {
+          (router.canGoBack()) && (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="mr-2"
+            >
+              <Ionicons
+                name="chevron-back"
+                size={20}
+                color={theme.colors.primary}
+              />
+            </TouchableOpacity>
+          )
+        }
         <Text
             className="font-[Montserrat-bold] text-2xl flex-1"
             style={{

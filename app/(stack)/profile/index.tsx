@@ -3,6 +3,7 @@ import { AuthContext } from "@/context/Auth.context";
 import { ThemeContext } from "@/context/Theme.context";
 import { useForm } from "@/hooks/useForm.hook";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useContext, useState } from "react";
 import { ActivityIndicator, Image, Platform, ScrollView, Text, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
 
@@ -43,7 +44,7 @@ export default function ProfileScreen() {
         <ProtectedRoute>
             <ScrollView>
                 <View
-                    className="flex flex-col items-center"
+                    className="flex flex-col items-center px-[25]"
                 >
                     <View
                         className="w-44 h-44 mt-7 relative"
@@ -61,7 +62,7 @@ export default function ProfileScreen() {
                             style={{
                                 backgroundColor: theme.colors.card
                             }}
-                            onPress={() => {}}
+                            onPress={() => router.push('/camera')}
                         >
                             <Ionicons
                                 name="camera"

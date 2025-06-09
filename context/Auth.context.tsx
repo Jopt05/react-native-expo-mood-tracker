@@ -1,4 +1,4 @@
-import { LoginProps, LoginResponse, RegisterProps, UserPayload } from "@/apis/mood-tracker/interfaces";
+import { GetUserResponse, LoginProps, LoginResponse, RegisterProps, UserPayload } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import { getItemFromAsyncStorage, removeItemFromAsyncStorage, setItemToAsyncStorage } from "@/utils/asyncstorage";
 import { AxiosError } from "axios";
@@ -108,7 +108,11 @@ export const AuthProvider = ({children}: any) => {
                 console.log('No existe token en storage')
                 return false;
             }
-            const { data } = await moodTrackedApi.put('/users', { name }, { headers: { 'Authorization': `Bearer ${token}` }});
+            const { data } = await moodTrackedApi.put<GetUserResponse>('/users', { name }, { headers: { 'Authorization': `Bearer ${token}` }});
+            setauthState({
+                ...authState,
+                userData: data.payload
+            })
             console.log('Usuario actualizado')
             return true;
         } catch (error) {

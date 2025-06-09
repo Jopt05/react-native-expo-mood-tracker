@@ -62,6 +62,9 @@ export default function HomeScreen() {
                     refreshing={ isRefreshing }
                 />
             }
+            style={{
+                paddingHorizontal: 25
+            }}
         >
             <ModalFormComponent 
                 onClose={() => setIsModalOpen(!isModalOpen)}
