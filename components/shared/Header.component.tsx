@@ -1,24 +1,17 @@
 import { AuthContext } from "@/context/Auth.context";
 import { ThemeContext } from "@/context/Theme.context";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
-import { Image, Platform, Text, ToastAndroid, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 export default function HeaderComponent() {
 
-  const { authState, logout, requestResetPassword } = useContext( AuthContext );
+  const { authState } = useContext( AuthContext );
   const { theme, setDarkTheme, setLightTheme }  = useContext( ThemeContext );
+  const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleResetPassword = async() => {
-    if (!authState.userData) return;
-    const resetSuccessful = await requestResetPassword(authState.userData.email);
-    if( Platform.OS === 'android' && resetSuccessful ) {
-      ToastAndroid.show('Password was successfully reset', ToastAndroid.SHORT)
-    }
-    setIsModalOpen(false);
-  }
 
   const handleChangeTheme = async() => {
     if( theme.dark ) {
@@ -66,7 +59,9 @@ export default function HeaderComponent() {
                 }}
               >
                 <TouchableOpacity
-                  onPress={() => logout()}
+                  onPress={() => {
+                    router.push('/profile');
+                  }}
                 >
                   <Text
                     className="font-[Montserrat-regular] text-xl text-center py-1"
@@ -74,19 +69,7 @@ export default function HeaderComponent() {
                       color: theme.colors.primary
                     }}
                   >
-                    Logout
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleResetPassword()}
-                >
-                  <Text
-                    className="font-[Montserrat-regular] text-xl text-center py-1"
-                    style={{
-                      color: theme.colors.primary
-                    }}
-                  >
-                    Reset password
+                    Your profile
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -100,9 +83,11 @@ export default function HeaderComponent() {
               onPress={() => setIsModalOpen(!isModalOpen)}
             >
               <Image
-                className="w-10 h-10"
+                className="w-10 h-10 rounded-full"
                 source={{
-                  uri: "https://cdni.iconscout.com/illustration/premium/thumb/male-user-image-illustration-download-in-svg-png-gif-file-formats--person-picture-profile-business-pack-illustrations-6515860.png"
+                  uri: (authState?.userData?.photoUrl)
+                    ? authState.userData.photoUrl
+                    : "https://cdni.iconscout.com/illustration/premium/thumb/male-user-image-illustration-download-in-svg-png-gif-file-formats--person-picture-profile-business-pack-illustrations-6515860.png"
                 }}
               >
 

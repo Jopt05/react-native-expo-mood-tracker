@@ -25,6 +25,7 @@ export interface UserPayload {
   password:  string;
   createdAt: Date;
   updatedAt: Date;
+  photoUrl?: string;
 }
 export interface GetMoodsResponse {
   message:    string;

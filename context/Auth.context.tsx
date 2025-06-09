@@ -25,6 +25,7 @@ export interface AuthContextProps {
     getUserInfo: () => Promise<void>;
     validateAuth: () => Promise<void>;
     requestResetPassword: (userEmail: string) => Promise<boolean>;
+    updateUser: (name: string) => Promise<boolean>;
 }
 
 export const AuthContext = createContext({} as AuthContextProps);
@@ -100,6 +101,23 @@ export const AuthProvider = ({children}: any) => {
         }
     }
 
+    const updateUser = async(name: string) => {
+        try {
+            const token = await getItemFromAsyncStorage('authToken');
+            if( !token ) {
+                console.log('No existe token en storage')
+                return false;
+            }
+            const { data } = await moodTrackedApi.put('/users', { name }, { headers: { 'Authorization': `Bearer ${token}` }});
+            console.log('Usuario actualizado')
+            return true;
+        } catch (error) {
+            console.log(`Ocurrio un error en updateUser: ${error}`)
+            console.log(error)
+            return false;
+        }
+    }
+
     const login = async (loginData: LoginProps) => {
         try {
             const { data } = await moodTrackedApi.post<LoginResponse>('/users/login', loginData);
@@ -162,7 +180,8 @@ export const AuthProvider = ({children}: any) => {
                 logout,
                 getUserInfo,
                 validateAuth,
-                requestResetPassword
+                requestResetPassword,
+                updateUser
             }}
         >
             {children}
