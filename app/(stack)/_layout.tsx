@@ -61,7 +61,11 @@ const RootLayout = () => {
       <Stack.Screen 
         name="camera/index"
         options={{
-          headerShown: false
+          headerShown: false,
+          contentStyle: {
+            padding: 0
+          },
+          statusBarStyle: 'dark',
         }}
       />
     </Stack>
