@@ -25,7 +25,7 @@ export interface AuthContextProps {
     getUserInfo: () => Promise<void>;
     validateAuth: () => Promise<void>;
     requestResetPassword: (userEmail: string) => Promise<boolean>;
-    updateUser: (name: string) => Promise<boolean>;
+    updateUser: (name: string, imagePath: string) => Promise<boolean>;
 }
 
 export const AuthContext = createContext({} as AuthContextProps);
@@ -101,14 +101,27 @@ export const AuthProvider = ({children}: any) => {
         }
     }
 
-    const updateUser = async(name: string) => {
+    const updateUser = async(name: string, imagePath?: string) => {
         try {
+            let formData = new FormData();
+            formData.append('name', name);
+            if( imagePath ) {
+                console.log(1)
+                formData.append('file', {
+                    uri: imagePath,
+                    name: 'image.jpg',
+                    type: 'image/jpeg',
+                } as any);
+            } 
             const token = await getItemFromAsyncStorage('authToken');
             if( !token ) {
                 console.log('No existe token en storage')
                 return false;
             }
-            const { data } = await moodTrackedApi.put<GetUserResponse>('/users', { name }, { headers: { 'Authorization': `Bearer ${token}` }});
+            const { data } = await moodTrackedApi.put<GetUserResponse>('/users', formData, { 
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+            });
+            console.log({data})
             setauthState({
                 ...authState,
                 userData: data.payload

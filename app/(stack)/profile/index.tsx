@@ -1,10 +1,11 @@
 import ProtectedRoute from "@/components/shared/ProtectedRoute.component";
 import { AuthContext } from "@/context/Auth.context";
+import { CameraContext } from "@/context/Camera.context";
 import { ThemeContext } from "@/context/Theme.context";
 import { useForm } from "@/hooks/useForm.hook";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ActivityIndicator, Image, Platform, ScrollView, Text, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
 
 
@@ -12,6 +13,7 @@ export default function ProfileScreen() {
 
     const { theme } = useContext( ThemeContext );
     const { authState, requestResetPassword, logout, updateUser } = useContext( AuthContext );
+    const { cameraState, resetImage, saveImage } = useContext( CameraContext );
 
     const { name, onChange } = useForm({
         name: authState.userData?.name
@@ -19,6 +21,12 @@ export default function ProfileScreen() {
 
     const [isEditing, setIsEditing] = useState(false);
     const [isloading, setIsloading] = useState(false);
+
+    useEffect(() => {
+      if( !cameraState.image ) return; 
+      setIsEditing(true);
+      onChange(authState.userData!.name, 'name');
+    }, [cameraState])
 
     const handleResetPassword = async() => {
         if (!authState.userData) return;
@@ -32,12 +40,22 @@ export default function ProfileScreen() {
         if (!authState.userData) return;
         if( !name ) return;
         setIsloading(true);
-        const updateSuccessful = await updateUser(name);
+        const updateSuccessful = await updateUser(name, cameraState.image);
         if( Platform.OS === 'android' && updateSuccessful ) {
             ToastAndroid.show('Profile was successfully updated', ToastAndroid.SHORT)
         }
         setIsEditing(false);
         setIsloading(false);
+        resetImage();
+    }
+
+    const handleChangePP = async() => {
+        router.push('/camera');
+    }
+    
+    const handleCancelEdit = () => {
+        resetImage();
+        setIsEditing(false);
     }
 
     return (
@@ -49,20 +67,34 @@ export default function ProfileScreen() {
                     <View
                         className="w-44 h-44 mt-7 relative"
                     >
-                        <Image
-                            className="w-full h-full rounded-full"
-                            source={{
-                            uri: (authState?.userData?.photoUrl)
-                                ? authState.userData.photoUrl
-                                : "https://cdni.iconscout.com/illustration/premium/thumb/male-user-image-illustration-download-in-svg-png-gif-file-formats--person-picture-profile-business-pack-illustrations-6515860.png"
-                            }}
-                        />
+                        {
+                            (!cameraState.image) && (
+                                <Image
+                                    className="w-full h-full rounded-full"
+                                    source={{
+                                    uri: (authState?.userData?.photoUrl)
+                                        ? authState.userData.photoUrl
+                                        : "https://cdni.iconscout.com/illustration/premium/thumb/male-user-image-illustration-download-in-svg-png-gif-file-formats--person-picture-profile-business-pack-illustrations-6515860.png"
+                                    }}
+                                />
+                            )
+                        }
+                        {
+                            (cameraState.image) && (
+                                <Image
+                                    className="w-full h-full rounded-full"
+                                    source={{
+                                    uri: cameraState.image
+                                    }}
+                                />
+                            )
+                        }
                         <TouchableOpacity
                             className="absolute bottom-0 right-0 rounded-full p-2"
                             style={{
                                 backgroundColor: theme.colors.card
                             }}
-                            onPress={() => router.push('/camera')}
+                            onPress={() => handleChangePP()}
                         >
                             <Ionicons
                                 name="camera"
@@ -121,26 +153,38 @@ export default function ProfileScreen() {
                         </View>
                         {
                             (isEditing) && (
-                                <TouchableOpacity
-                                    onPress={() => handleUpdate()}
-                                    className="flex flex-1 items-center justify-center rounded-xl mt-10 bg-blue-500 py-4"
-                                >
-                                    {
-                                        (isloading) ? (
-                                            <ActivityIndicator 
-                                                size="small"
-                                                color="white"
-                                            />
-                                        )
-                                        : (
-                                            <Text
-                                                className="text-lg font-[Montserrat-bold] text-white"
-                                            >
-                                                Save changes
-                                            </Text>
-                                        )
-                                    }
-                                </TouchableOpacity>
+                                <>
+                                    <TouchableOpacity
+                                        onPress={() => handleUpdate()}
+                                        className="flex flex-1 items-center justify-center rounded-xl mt-10 bg-blue-500 py-4"
+                                    >
+                                        {
+                                            (isloading) ? (
+                                                <ActivityIndicator 
+                                                    size="small"
+                                                    color="white"
+                                                />
+                                            )
+                                            : (
+                                                <Text
+                                                    className="text-lg font-[Montserrat-bold] text-white"
+                                                >
+                                                    Save changes
+                                                </Text>
+                                            )
+                                        }
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => handleCancelEdit()}
+                                        className="flex flex-1 items-center justify-center rounded-xl mt-1 bg-red-500 py-4"
+                                    >
+                                        <Text
+                                            className="text-lg font-[Montserrat-bold] text-white"
+                                        >
+                                            Cancel
+                                        </Text>
+                                    </TouchableOpacity>
+                                </>
                             )
                         }
                         <TouchableOpacity
