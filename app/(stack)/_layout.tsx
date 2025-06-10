@@ -1,5 +1,6 @@
 import HeaderComponent from "@/components/shared/Header.component";
 import { AuthProvider } from "@/context/Auth.context";
+import { CameraProvider } from "@/context/Camera.context";
 import { ThemeContext, ThemeProvider } from "@/context/Theme.context";
 import { Stack } from "expo-router";
 import { useContext } from "react";
@@ -10,7 +11,9 @@ const AppState = ({children}: any) => {
   return (
     <AuthProvider>
       <ThemeProvider>
-        {children}
+        <CameraProvider>
+          {children}
+        </CameraProvider>
       </ThemeProvider>
     </AuthProvider>
   )
