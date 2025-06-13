@@ -1,17 +1,11 @@
 import { Mood } from "@/apis/mood-tracker/interfaces";
 import { ThemeContext } from "@/context/Theme.context";
-import { formatMoodToChartColor, moodToText, numberToSleep, sleepToNumber } from "@/utils/mood";
-import { useFont } from "@shopify/react-native-skia";
+import { formatMoodToChartColor, moodToImage, numberToSleep, sleepToNumber } from "@/utils/mood";
 import { useContext, useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
-import { Bar, CartesianChart } from "victory-native";
-
+import { Image, ScrollView, Text, View } from "react-native";
+import { BarChart, barDataItem } from "react-native-gifted-charts";
 interface ChartComponentProps {
   data: Mood[]
-}
-
-interface ChartDataState extends ChartComponentProps {
-  isLoading: boolean
 }
 
 const MOODS_LIST = [
@@ -28,19 +22,32 @@ export default function ChartComponent(props: ChartComponentProps) {
 
     const { theme } = useContext( ThemeContext );
 
-    const font = useFont(Montserrat, 12);
-    const [charData, setChartData] = useState<ChartDataState>({
-        isLoading: true,
+    const [charData, setChartData] = useState<{ data: barDataItem[] }>({
         data: []
     });
 
     useEffect(() => {
       setChartData({
-        isLoading: false,
-        data: props.data
-      })
+        data: mapChartData()
+      });
     }, [props.data])
     
+    const mapChartData = () => {
+      const chartData = props.data.map((m, index) => {
+        return ({
+          value: sleepToNumber(m.sleep),
+          label: new Date(m.createdAt).toLocaleDateString(),
+          frontColor: formatMoodToChartColor(m.mood),
+          topLabelComponent: () => (
+            <Image 
+              className="w-[35] h-[35] mb-[-35]"
+              source={moodToImage(m.mood)}
+            />
+          ),
+        })
+      })
+      return chartData;
+    }
 
     return (
         <View
@@ -64,96 +71,36 @@ export default function ChartComponent(props: ChartComponentProps) {
             <View
               style={{
                 height: 300,
-                width: 800
               }}
             >
-              <CartesianChart
-                data={charData.data.map((m, index) => {
-                  return ({
-                    date: index + 1,
-                    value: sleepToNumber(m.sleep),
-                  })
-                })}
-                xKey="date"
-                yKeys={["value"]}
-                domainPadding={{ left: 50, right: 50, top: 30 }}
-                axisOptions={{
-                  font,
-                  formatYLabel(value) {
-                    return numberToSleep(value);
-                  },
-                  labelColor: theme.colors.primary,
-                  tickValues: {
-                    y: [0,1,2,3,4,5],
-                    x: charData.data.map((m, index) => index + 1)
-                  },
-                  tickCount: {
-                    y: 5,
-                    x: charData.data.length
-                  },
-                  formatXLabel(label) {
-                    const mood = charData.data[label - 1];
-                     const d = new Date(mood.createdAt);
-                    return `${d.getDate()}/${d.getMonth()}/${d.getFullYear()}`
-                  },
+              <BarChart 
+                data={charData.data}
+                barBorderTopLeftRadius={15}
+                barBorderTopRightRadius={15}
+                dashGap={25}
+                spacing={50}
+                barWidth={35}
+                height={250}
+                maxValue={5}
+                stepValue={1}
+                xAxisLabelTextStyle={{
+                  color: theme.colors.primary
                 }}
-              >
-                {({ points, chartBounds }) => {
-                  return points.value.map((p, i) => {
-                    return (
-                      <Bar
-                        key={i}
-                        barCount={points.value.length}
-                        points={[p]}
-                        chartBounds={chartBounds}
-                        animate={{ type: "spring" }}
-                        roundedCorners={{
-                          topLeft: 5,
-                          topRight: 5,
-                        }}
-                        color={ formatMoodToChartColor(charData.data[i].mood) }
-                      />
-                    )
-                  })
+                yAxisTextStyle={{
+                  color: theme.colors.primary,
+                  fontSize: 10,
+                  fontFamily: 'Montserrat-regular'
                 }}
-              </CartesianChart>
+                formatYLabel={(value) => {
+                  if( value == '0' ) return '';
+                  const hourText = numberToSleep(Number(value));
+                  return `${hourText} hours`
+                }}
+                yAxisLabelWidth={60}
+                isAnimated
+              />
             </View>
           </ScrollView>
-          <View
-            className="flex flex-row justify-center items-center gap-2 mt-4"
-            style={{
-              flexWrap: 'wrap'
-            }}
-          >
-            {
-              MOODS_LIST.map((m, i) => (
-                <View 
-                  className="flex flex-row items-center gap-2"
-                  style={{
-                    width: 100,
-                    flexWrap: 'wrap'
-                  }}
-                  key={i}
-                >
-                  <Text
-                    className="font-[Montserrat-regular] text-sm"
-                    style={{
-                      color: theme.colors.primary
-                    }}
-                  >
-                    { moodToText(m) }
-                  </Text>
-                  <View
-                    className="w-4 h-4 "
-                    style={{
-                      backgroundColor: formatMoodToChartColor(m)
-                    }}
-                  >
-                  </View>
-                </View>
-              ))
-            }
-          </View>
         </View>
     )
 }
