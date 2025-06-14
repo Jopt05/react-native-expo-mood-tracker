@@ -36,7 +36,7 @@ export default function HomeScreen() {
         if( authState.userData ) return
         getUserInfo()
         getMoods()
-        getAdvice();
+        // getAdvice();
     }, [authState.isLoggedIn])
 
     const currentDate = new Date();

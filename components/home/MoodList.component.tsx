@@ -5,9 +5,9 @@ import { moodToImage, sleepToText } from "@/utils/mood";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Image, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import DateTimePicker, { DateType, useDefaultStyles } from 'react-native-ui-datepicker';
-import DayfaceComponent from "./Dayface.component";
+import { ActivityIndicator, FlatList, Image, Modal, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { DateType } from "react-native-ui-datepicker";
+import DatePickerComponent from "./Datepicker.component";
 
 
 interface ModalComponentProps {
@@ -20,6 +20,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
     const { theme } = useContext( ThemeContext );
 
     const scrollViewElement = useRef<ScrollView>(null);
+    const flatListElement = useRef<FlatList>(null);
 
     const [moodsList, setMoodsList] = useState<Mood[]>([]);
     const [pagingData, setPagingData] = useState({
@@ -27,9 +28,12 @@ export default function MoodListComponent(props: ModalComponentProps) {
         page: 1,
         total: 0
     });
-    const defaultStyles = useDefaultStyles();
-    const [selected, setSelected] = useState<DateType>();
     const [selectedMood, setSelectedMood] = useState<Mood>();
+    const [flatListWidth, setFlatListWidth] = useState(0);
+    const [monthYearState, setMonthYearState] = useState({
+        month: new Date().getMonth(),
+        year: new Date().getFullYear()
+    });
 
     useEffect(() => {
         if( !props.visible ) return; 
@@ -37,20 +41,15 @@ export default function MoodListComponent(props: ModalComponentProps) {
     }, [props.visible])
 
     useEffect(() => {
-        if( !selected ) return;
-        const plainDate = new Date(selected.toString()).setHours(0, 0, 0, 0);
-        const mood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
-        setSelectedMood(mood);
-        setTimeout(() => {
-            if( scrollViewElement.current ) {
-                scrollViewElement.current.scrollToEnd({ animated: true })
-            }
-        }, 100);
-    }, [selected])
+      console.log(monthYearState)
+    }, [monthYearState])
     
     
     const getMoods = async(page = 1) => {
-        if( page != 1 ) return console.log('Cargando más moods')
+        setPagingData({
+            ...pagingData,
+            isLoading: true
+        });
         try {
             const token = await AsyncStorage.getItem('authToken');
             if( !token ) return;
@@ -71,17 +70,6 @@ export default function MoodListComponent(props: ModalComponentProps) {
         }
     }
 
-    const handleEndReached = async() => {
-        if( pagingData.isLoading ) return
-        if( moodsList.length >= pagingData.total ) return;
-        setPagingData({
-            ...pagingData,
-            isLoading: true,
-            page: pagingData.page + 1
-        });
-        await getMoods(pagingData.page + 1)
-    }
-
     const handleClose = async() => {
         setMoodsList([]);
         setPagingData({
@@ -90,8 +78,72 @@ export default function MoodListComponent(props: ModalComponentProps) {
             total: 0
         })
         setSelectedMood(undefined);
-        setSelected(undefined);
         props.onClose();
+    }
+
+    const handleScrollAnimationEnd = () => {
+        if( !flatListElement.current ) return;
+        flatListElement.current?.scrollToIndex({
+            index: 1,
+            animated: true
+        })
+    }
+
+    const handleScroll = ( event: NativeSyntheticEvent<NativeScrollEvent> ) => {
+        let direction = "";
+        const { contentOffset, layoutMeasurement } = event.nativeEvent;
+        const currentIndex = Math.floor(contentOffset.x / layoutMeasurement.width);
+        
+        direction = ( currentIndex === 0 ) ? 'right' : 'left';
+        if( direction === 'right' ) {
+            decreaseMonth();
+        } else {
+            increaseMonth();
+        }
+    }
+
+    const increaseMonth = () => {
+        if( monthYearState.month === 11 ) {
+            setMonthYearState({
+                ...monthYearState,
+                month: 0,
+                year: monthYearState.year + 1
+            })
+            return;
+        }
+        setMonthYearState({
+            ...monthYearState,
+            month: monthYearState.month + 1
+        })
+    }
+
+    const decreaseMonth = () => {
+        if( monthYearState.month === 0 ) {
+            setMonthYearState({
+                month: 11,
+                year: monthYearState.year - 1
+            })
+            return;
+        }
+        setMonthYearState({
+            ...monthYearState,
+            month: monthYearState.month - 1
+        })
+    }
+
+    const handleDateChange = (date: DateType) => {
+        if( !date ) {
+            setSelectedMood(undefined)
+            return;
+        };
+        const plainDate = new Date(date.toString()).setHours(0, 0, 0, 0);
+        const mood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
+        setSelectedMood(mood);
+        setTimeout(() => {
+            if( scrollViewElement.current ) {
+                scrollViewElement.current.scrollToEnd({ animated: true });
+            }
+        }, 100);
     }
 
     return (
@@ -119,6 +171,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
                 ></TouchableOpacity>
                 <ScrollView
                     style={{
+                        position: 'relative',
                         width: '90%',
                         maxHeight: 450,
                         backgroundColor: theme.colors.background,
@@ -134,75 +187,59 @@ export default function MoodListComponent(props: ModalComponentProps) {
                     >
                         Your previous check ins
                     </Text>
-                    <DateTimePicker
-                        mode="single"
-                        date={selected}
-                        onChange={({ date }) =>  {
-                            if( !date ) return setSelectedMood(undefined);
-                            setSelected(date);
-                        }}
-                        components={{
-                            Day(day) {
-                                const plainDate = new Date(day.date).setHours(0, 0, 0, 0);
-                                const matchingMood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
-                                return <DayfaceComponent day={day} matchingMood={matchingMood} />
-                            },
-                        }}
-                        disabledDates={(date) => {
-                            const plainDate = new Date(date as Date).setHours(0, 0, 0, 0);
-                            const matchingMood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
-                            return !matchingMood;
-                        }}
-                        styles={{
-                            ...defaultStyles,
-                            day_label: {
-                                color: theme.colors.primary
-                            },
-                            month_label: {
-                                color: theme.colors.primary
-                            },
-                            year_label: {
-                                color: theme.colors.primary
-                            },
-                            selected: {
-                                backgroundColor: theme.colors.card
-                            },
-                            weekday_label: {
-                                color: theme.colors.text
-                            },
-                            month_selector_label: {
-                                color: theme.colors.primary
-                            },
-                            year_selector_label: {
-                                color: theme.colors.primary
-                            },
-                            selected_month: {
-                                backgroundColor: theme.colors.card
-                            },
-                            selected_year: {
-                                backgroundColor: theme.colors.card
-                            },
-                            today: {
-                                backgroundColor: 'transparent'
-                            },
-                            button_prev: {
-                                backgroundColor: theme.colors.card,
-                                borderRadius: 10,
-                                color: 'red'
-                            },
-                            button_next: {
-                                backgroundColor: theme.colors.card,
-                                borderRadius: 10,
-                                color: 'red'
-                            },
-                            button_next_image: {
-                                tintColor: theme.colors.primary
-                            },
-                            button_prev_image: {
-                                tintColor: theme.colors.primary
-                            }
-                        }}
-                    />
+                    {
+                        (pagingData.isLoading) ? (
+                            <ActivityIndicator 
+                                className="flex mt-20"
+                                size={40}
+                            />
+                        ) : (
+                            <FlatList 
+                                ref={flatListElement}
+                                data={[0, 1, 2]} 
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                onLayout={(event) => {
+                                    const { width } = event.nativeEvent.layout;
+                                    setFlatListWidth(width);
+                                }}
+                                // initialScrollIndex={1}
+                                pagingEnabled
+                                onScrollEndDrag={handleScrollAnimationEnd}
+                                onScroll={handleScroll} 
+                                onScrollToIndexFailed={info => {
+                                    const wait = new Promise(resolve => setTimeout(resolve, 500));
+                                    wait.then(() => {
+                                    flatListElement.current?.scrollToIndex({ index: 1, animated: true });
+                                    });
+                                }}
+                                scrollEventThrottle={500}
+                                renderItem={({index}) => {
+                                    if( index === 1 ) {
+                                        return (
+                                            <DatePickerComponent 
+                                                parentWidth={flatListWidth}
+                                                onDateChange={(date) => handleDateChange(date)}
+                                                moodList={ moodsList }
+                                                currentMonth={ monthYearState.month }
+                                                currentYear={ monthYearState.year }
+                                            />
+                                        )
+                                    }
+                                    return (
+                                        <View 
+                                            className="flex-1"
+                                            style={{
+                                                width: flatListWidth
+                                            }}
+                                        >
+                                        </View>
+                                    )
+                                }}
+                            />
+                        )
+
+                    }
                     {
                         (selectedMood) && (
                             <View
