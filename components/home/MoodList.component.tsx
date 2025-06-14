@@ -1,13 +1,12 @@
 import { GetMoodsResponse, Mood } from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import { ThemeContext } from "@/context/Theme.context";
-import { moodToImage, sleepToText } from "@/utils/mood";
-import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useContext, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Modal, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { DateType } from "react-native-ui-datepicker";
 import DatePickerComponent from "./Datepicker.component";
+import MoodInformation from "./MoodInformation.component";
 
 
 interface ModalComponentProps {
@@ -31,7 +30,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
     const [selectedMood, setSelectedMood] = useState<Mood>();
     const [flatListWidth, setFlatListWidth] = useState(0);
     const [monthYearState, setMonthYearState] = useState({
-        month: new Date().getMonth(),
+        month: new Date().getMonth() + 1,
         year: new Date().getFullYear()
     });
 
@@ -105,9 +104,8 @@ export default function MoodListComponent(props: ModalComponentProps) {
     const increaseMonth = () => {
         if( monthYearState.month === 11 ) {
             setMonthYearState({
-                ...monthYearState,
+                year: monthYearState.year + 1,
                 month: 0,
-                year: monthYearState.year + 1
             })
             return;
         }
@@ -120,8 +118,8 @@ export default function MoodListComponent(props: ModalComponentProps) {
     const decreaseMonth = () => {
         if( monthYearState.month === 0 ) {
             setMonthYearState({
+                year: monthYearState.year - 1,
                 month: 11,
-                year: monthYearState.year - 1
             })
             return;
         }
@@ -201,9 +199,11 @@ export default function MoodListComponent(props: ModalComponentProps) {
                                 showsHorizontalScrollIndicator={false}
                                 onLayout={(event) => {
                                     const { width } = event.nativeEvent.layout;
+                                    flatListElement.current?.scrollToIndex({
+                                        index: 1
+                                    })
                                     setFlatListWidth(width);
                                 }}
-                                // initialScrollIndex={1}
                                 pagingEnabled
                                 onScrollEndDrag={handleScrollAnimationEnd}
                                 onScroll={handleScroll} 
@@ -242,76 +242,9 @@ export default function MoodListComponent(props: ModalComponentProps) {
                     }
                     {
                         (selectedMood) && (
-                            <View
-                                className="flex flex-col px-4 py-4"
-                                style={{
-                                    backgroundColor: theme.colors.card,
-                                    borderRadius: 10,
-                                    ...(selectedMood ? { marginBottom: 40 } : {})
-                                }}
-                            >
-                                <Text
-                                    className="font-[Montserrat-regular] text-lg"
-                                    style={{
-                                        color: theme.colors.primary
-                                    }}
-                                >
-                                    { new Date(selectedMood.createdAt).toDateString() }
-                                </Text>
-                                <View
-                                    className="flex flex-col justify-center mt-3"
-                                >
-                                    <View
-                                        className="flex flex-row justify-between selectedMoods-center mt-2"
-                                    >
-                                        <Ionicons 
-                                            name="happy-outline"
-                                            size={25}
-                                            color={theme.colors.text}
-                                        />
-                                        <Image
-                                            className="w-10 h-10"
-                                            source={moodToImage(selectedMood.mood)}
-                                        />
-                                    </View>
-                                    <View
-                                        className="flex flex-row justify-between items-center mt-4"
-                                    >
-                                        <Ionicons 
-                                            name="bed-outline"
-                                            size={25}
-                                            color={theme.colors.text}
-                                        />
-                                        <Text
-                                            className="font-[Montserrat-regular] text-lg"
-                                            style={{
-                                                color: theme.colors.primary
-                                            }}
-                                        >
-                                            { sleepToText(selectedMood.sleep) } hours
-                                        </Text>
-                                    </View>
-                                    <View
-                                        className="flex flex-row items-center mt-4"
-                                    >
-                                        <Ionicons 
-                                            name="cloud-outline"
-                                            size={25}
-                                            color={theme.colors.text}
-                                        />
-                                        <Text
-                                            className="flex text-right font-[Montserrat-regular] text-sm"
-                                            style={{
-                                                width: '60%',
-                                                marginLeft: 'auto',
-                                                color: theme.colors.primary
-                                            }}
-                                        >
-                                            { selectedMood.reflection || 'No reflection this day' }
-                                        </Text>
-                                    </View>
-                                </View>
-                            </View>
+                            <MoodInformation 
+                                selectedMood={selectedMood}
+                            />
                         )
                     }
                 </ScrollView>
@@ -319,3 +252,4 @@ export default function MoodListComponent(props: ModalComponentProps) {
         </Modal>
     )
 }
+
