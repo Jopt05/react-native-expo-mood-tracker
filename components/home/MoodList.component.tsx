@@ -23,32 +23,25 @@ export default function MoodListComponent(props: ModalComponentProps) {
 
     const [moodsList, setMoodsList] = useState<Mood[]>([]);
     const [pagingData, setPagingData] = useState({
-        isLoading: false,
+        isLoading: true,
         page: 1,
         total: 0
     });
     const [selectedMood, setSelectedMood] = useState<Mood>();
     const [flatListWidth, setFlatListWidth] = useState(0);
     const [monthYearState, setMonthYearState] = useState({
-        month: new Date().getMonth() + 1,
+        month: new Date().getMonth(),
         year: new Date().getFullYear()
     });
+    const [isFirstRender, setIsFirstRender] = useState(true);
 
     useEffect(() => {
         if( !props.visible ) return; 
         getMoods()
+        setIsFirstRender(true);
     }, [props.visible])
-
-    useEffect(() => {
-      console.log(monthYearState)
-    }, [monthYearState])
-    
     
     const getMoods = async(page = 1) => {
-        setPagingData({
-            ...pagingData,
-            isLoading: true
-        });
         try {
             const token = await AsyncStorage.getItem('authToken');
             if( !token ) return;
@@ -89,6 +82,8 @@ export default function MoodListComponent(props: ModalComponentProps) {
     }
 
     const handleScroll = ( event: NativeSyntheticEvent<NativeScrollEvent> ) => {
+        setIsFirstRender(false);
+        if( isFirstRender ) return;
         let direction = "";
         const { contentOffset, layoutMeasurement } = event.nativeEvent;
         const currentIndex = Math.floor(contentOffset.x / layoutMeasurement.width);
