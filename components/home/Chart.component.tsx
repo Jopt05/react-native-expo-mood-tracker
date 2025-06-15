@@ -40,7 +40,7 @@ export default function ChartComponent(props: ChartComponentProps) {
           frontColor: formatMoodToChartColor(m.mood),
           topLabelComponent: () => (
             <Image 
-              className="w-[35] h-[35] mb-[-35]"
+              className="w-[40] h-[40] mb-[-40]"
               source={moodToImage(m.mood)}
             />
           ),
@@ -75,11 +75,12 @@ export default function ChartComponent(props: ChartComponentProps) {
             >
               <BarChart 
                 data={charData.data}
-                barBorderTopLeftRadius={15}
-                barBorderTopRightRadius={15}
-                dashGap={25}
-                spacing={50}
-                barWidth={35}
+                barBorderRadius={20}
+                dashGap={0}
+                spacing={40}
+                endSpacing={20}
+                initialSpacing={20}
+                barWidth={40}
                 height={250}
                 maxValue={5}
                 stepValue={1}

@@ -6,17 +6,17 @@ import { ActivityIndicator, AppState, View } from "react-native";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
-  const { authState, validateAuth, getUserInfo } = useContext( AuthContext );
+  const { authState, getUserInfo } = useContext( AuthContext );
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {
-    console.log(authState)
      const subscription = AppState.addEventListener("change", nextAppState => {
       console.log("App State changed to", nextAppState);
       appState.current = nextAppState;
       if( nextAppState == 'active' ) {
         getUserInfo();
       }
+      console.log(authState)
     });
 
     return () => {

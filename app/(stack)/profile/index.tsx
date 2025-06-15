@@ -60,12 +60,12 @@ export default function ProfileScreen() {
 
     return (
         <ProtectedRoute>
-            <ScrollView>
-                <View
-                    className="flex flex-col items-center px-[25]"
+            <View className="flex flex-1">
+                <ScrollView
+                    className="flex flex-1 flex-col px-[25]"
                 >
                     <View
-                        className="w-44 h-44 mt-7 relative"
+                        className="w-44 h-44 mt-7 relative mx-auto"
                     >
                         {
                             (!cameraState.image) && (
@@ -189,7 +189,7 @@ export default function ProfileScreen() {
                         }
                         <TouchableOpacity
                             onPress={() => handleResetPassword()}
-                            className="flex flex-1 items-center justify-center rounded-xl mt-10 bg-blue-500 py-4"
+                            className="flex flex-1 items-center justify-center rounded-xl mt-40 bg-blue-500 py-4"
                         >
                             <Text
                                 className="text-lg font-[Montserrat-bold] text-white"
@@ -208,8 +208,8 @@ export default function ProfileScreen() {
                             </Text>
                         </TouchableOpacity>
                     </View>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </View>
         </ProtectedRoute>
     )
 }

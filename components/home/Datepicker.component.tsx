@@ -46,6 +46,8 @@ export default function DatePickerComponent({
                 const matchingMood = moodList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
                 return <DayfaceComponent day={day} matchingMood={matchingMood} />
             },
+            IconPrev: <></>,
+            IconNext: <></>
         }}
         disabledDates={(date) => {
             const plainDate = new Date(date as Date).setHours(0, 0, 0, 0);
@@ -83,22 +85,6 @@ export default function DatePickerComponent({
             },
             today: {
                 backgroundColor: 'transparent'
-            },
-            button_prev: {
-                backgroundColor: theme.colors.card,
-                borderRadius: 10,
-                color: 'red'
-            },
-            button_next: {
-                backgroundColor: theme.colors.card,
-                borderRadius: 10,
-                color: 'red'
-            },
-            button_next_image: {
-                tintColor: theme.colors.primary
-            },
-            button_prev_image: {
-                tintColor: theme.colors.primary
             }
         }}
     />

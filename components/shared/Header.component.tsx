@@ -74,6 +74,7 @@ export default function HeaderComponent() {
               >
                 <TouchableOpacity
                   onPress={() => {
+                    setIsModalOpen(false);
                     router.push('/profile');
                   }}
                 >

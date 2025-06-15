@@ -3,7 +3,7 @@ import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import { ThemeContext } from "@/context/Theme.context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useContext, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, LayoutChangeEvent, Modal, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { DateType } from "react-native-ui-datepicker";
 import DatePickerComponent from "./Datepicker.component";
 import MoodInformation from "./MoodInformation.component";
@@ -20,6 +20,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
 
     const scrollViewElement = useRef<ScrollView>(null);
     const flatListElement = useRef<FlatList>(null);
+    const isFirstRender = useRef(true);
 
     const [moodsList, setMoodsList] = useState<Mood[]>([]);
     const [pagingData, setPagingData] = useState({
@@ -33,12 +34,11 @@ export default function MoodListComponent(props: ModalComponentProps) {
         month: new Date().getMonth(),
         year: new Date().getFullYear()
     });
-    const [isFirstRender, setIsFirstRender] = useState(true);
 
     useEffect(() => {
         if( !props.visible ) return; 
         getMoods()
-        setIsFirstRender(true);
+        isFirstRender.current = true;
     }, [props.visible])
     
     const getMoods = async(page = 1) => {
@@ -73,7 +73,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
         props.onClose();
     }
 
-    const handleScrollAnimationEnd = () => {
+    const handleScrollEndDrag = () => {
         if( !flatListElement.current ) return;
         flatListElement.current?.scrollToIndex({
             index: 1,
@@ -82,8 +82,10 @@ export default function MoodListComponent(props: ModalComponentProps) {
     }
 
     const handleScroll = ( event: NativeSyntheticEvent<NativeScrollEvent> ) => {
-        setIsFirstRender(false);
-        if( isFirstRender ) return;
+        if( isFirstRender.current ) {
+            isFirstRender.current = false;
+            return;
+        };
         let direction = "";
         const { contentOffset, layoutMeasurement } = event.nativeEvent;
         const currentIndex = Math.floor(contentOffset.x / layoutMeasurement.width);
@@ -139,6 +141,14 @@ export default function MoodListComponent(props: ModalComponentProps) {
         }, 100);
     }
 
+    const handleFlatListLayout = (event: LayoutChangeEvent) => {
+        const { width } = event.nativeEvent.layout;
+        flatListElement.current?.scrollToIndex({
+            index: 1
+        })
+        setFlatListWidth(width);
+    }
+
     return (
         <Modal
             animationType="slide"
@@ -192,15 +202,9 @@ export default function MoodListComponent(props: ModalComponentProps) {
                                 data={[0, 1, 2]} 
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
-                                onLayout={(event) => {
-                                    const { width } = event.nativeEvent.layout;
-                                    flatListElement.current?.scrollToIndex({
-                                        index: 1
-                                    })
-                                    setFlatListWidth(width);
-                                }}
+                                onLayout={handleFlatListLayout}
                                 pagingEnabled
-                                onScrollEndDrag={handleScrollAnimationEnd}
+                                onScrollEndDrag={handleScrollEndDrag}
                                 onScroll={handleScroll} 
                                 onScrollToIndexFailed={info => {
                                     const wait = new Promise(resolve => setTimeout(resolve, 500));

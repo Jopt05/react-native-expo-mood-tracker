@@ -124,6 +124,7 @@ export default function LoginScreen() {
                         }}
                         placeholder="Your email here"
                         autoCapitalize="none"
+                        returnKeyType="next"
                         placeholderTextColor={theme.colors.text}
                         value={email}
                         onChangeText={(value) => onChange(value, 'email')}
@@ -147,6 +148,7 @@ export default function LoginScreen() {
                                     }}
                                     placeholder="Your name here"
                                     autoCapitalize="none"
+                                    returnKeyType="next"
                                     placeholderTextColor={theme.colors.text}
                                     value={name}
                                     onChangeText={(value) => onChange(value, 'name')}
