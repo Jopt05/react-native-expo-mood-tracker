@@ -6,15 +6,18 @@ import { Stack } from "expo-router";
 import { useContext } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import "../../global.css";
+import { MoodProvider } from "@/context/Mood.context";
 
 const AppState = ({children}: any) => {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <CameraProvider>
-          {children}
-        </CameraProvider>
-      </ThemeProvider>
+      <MoodProvider>
+        <ThemeProvider>
+          <CameraProvider>
+            {children}
+          </CameraProvider>
+        </ThemeProvider>
+      </MoodProvider>
     </AuthProvider>
   )
 }

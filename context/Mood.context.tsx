@@ -1,117 +1,153 @@
-import { AdviceResponse, GetMoodsResponse, Mood } from "@/apis/mood-tracker/interfaces";
+import {
+  AdviceResponse,
+  CreateMoodResponse,
+  GetMoodsResponse,
+  Mood,
+} from "@/apis/mood-tracker/interfaces";
 import moodTrackedApi from "@/apis/mood-tracker/mood-tracker.api";
 import { getItemFromAsyncStorage } from "@/utils/asyncstorage";
-import { createContext, useEffect, useState } from "react";
-
+import { createContext, useContext, useEffect, useState } from "react";
+import { AuthContext } from "./Auth.context";
 
 export interface MoodState {
-    todaysMood?: Mood;
-    moodList: Mood[];
-    averageMood?: string;
-    averageSleepSchedule?: string;
-    advice?: string;
+  todaysMood?: Mood;
+  moodList: Mood[];
+  averageMood?: string;
+  averageSleepSchedule?: string;
+  advice?: string;
 }
 
 export const initialMoodState: MoodState = {
-    moodList: []
-}
+  moodList: [],
+};
 
 export interface MoodContextProps {
-    moodState: MoodState;
+  moodState: MoodState;
+  createMood: (mood: Mood) => Promise<boolean | undefined>;
+  loadInitialData: () => Promise<void>;
 }
 
-export const MoodContext = createContext({} as MoodContextProps );
+export const MoodContext = createContext({} as MoodContextProps);
 
 export const MoodProvider = ({children}: any) => {
+  const {authState} = useContext(AuthContext);
+  const [moodState, setMoodState] = useState(initialMoodState);
 
-    const [moodState, setMoodState] = useState(initialMoodState);
-
-    const getMoods = async() => {
-        try {
-            const token = await getItemFromAsyncStorage('authToken');
-            if( !token ) return; 
-            const { data } = await moodTrackedApi.get<GetMoodsResponse>('/moods', { headers: { Authorization: `Bearer ${token}` }});
-            setMoodState({
-                ...moodState,
-                moodList: data.payload.mood,
-            });
-        } catch (error) {
-            console.log('Error al obtener moods');
-            console.log(error)
-        }
+  const getMoods = async () => {
+    try {
+      const token = await getItemFromAsyncStorage("authToken");
+      if (!token) return;
+      const {data} = await moodTrackedApi.get<GetMoodsResponse>("/moods", {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      setMoodState((x) => ({...x, moodList: data.payload.mood}));
+    } catch (error) {
+      console.log("Error al obtener moods");
+      console.log(error);
     }
+  };
 
-    const getAdvice = async() => {
-        try {
-            console.log('Obteniendo advice')
-            const token = await getItemFromAsyncStorage('authToken');
-            if( !token ) return; 
-            const { data } = await moodTrackedApi.get<AdviceResponse>('/advices', { headers: { Authorization: `Bearer ${token}` }});
-            setMoodState({
-                ...moodState,
-                advice: data.payload.advice,
-            })
-        } catch (error) {
-            console.log('Ocurrió un error en getAdvice')
-            console.log(error)
-        }
+  const getAdvice = async () => {
+    try {
+      const token = await getItemFromAsyncStorage("authToken");
+      if (!token) return;
+      const {data} = await moodTrackedApi.get<AdviceResponse>("/advices", {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      setMoodState({...moodState, advice: data.payload.advice});
+    } catch (error) {
+      console.log("Ocurrió un error en getAdvice");
+      console.log(error);
     }
+  };
 
-    const getTodayMood = () => {
-        const currentDate = new Date().toLocaleDateString();
-        const todaysMood = moodState.moodList?.find( m => new Date(m.createdAt).toLocaleDateString() == currentDate );
-        if( todaysMood ) return;
-        setMoodState({
-            ...moodState,
-            todaysMood
-        })
+  const getTodayMood = () => {
+    const currentDate = new Date().toLocaleDateString();
+    const todaysMood = moodState.moodList?.find(
+      (m) => new Date(m.createdAt).toLocaleDateString() == currentDate,
+    );
+    if (!todaysMood) return;
+    setMoodState((x) => ({...x, todaysMood}));
+  };
+
+  const getMostRepeatedMood = () => {
+    if (moodState.moodList.length === 0) return;
+    const moodCount = moodState.moodList.reduce((acc: any, mood: Mood) => {
+      acc[mood.mood] = (acc[mood.mood] || 0) + 1;
+      return acc;
+    }, {});
+    const mostRepeatedMood = Object.keys(moodCount).reduce((a, b) =>
+      moodCount[a] > moodCount[b] ? a : b,
+    );
+    setMoodState((x) => ({...x, averageMood: mostRepeatedMood}));
+  };
+
+  const getMostRepeatedSleep = () => {
+    if (moodState.moodList.length === 0) return;
+    const sleepCount = moodState.moodList.reduce((acc: any, mood: Mood) => {
+      acc[mood.sleep] = (acc[mood.sleep] || 0) + 1;
+      return acc;
+    }, {});
+    const mostRepeatedSleep = Object.keys(sleepCount).reduce((a, b) =>
+      sleepCount[a] > sleepCount[b] ? a : b,
+    );
+    setMoodState((x) => ({...x, averageSleepSchedule: mostRepeatedSleep}));
+  };
+
+  const createMood = async (newMood: Mood) => {
+    try {
+      const token = await getItemFromAsyncStorage("authToken");
+      if (!token) return;
+      const body = {
+        mood: newMood.mood,
+        sleep: newMood.sleep,
+        reflection: newMood.reflection,
+      };
+      const {data} = await moodTrackedApi.post<CreateMoodResponse>(
+        "/moods",
+        body,
+        {headers: {Authorization: `Bearer ${token}`}},
+      );
+      console.log({data});
+      if (data) {
+        setMoodState((x) => ({
+          ...x,
+          moodList: [data.payload, ...moodState.moodList],
+        }));
+      }
+      return true;
+    } catch (error) {
+      console.log("Error al crear mood");
+      console.log(error);
     }
+  };
 
-    const getMostRepeatedMood = () => {
-        if( moodState.moodList.length === 0 ) return;
-        const moodCount = moodState.moodList.reduce((acc: any, mood: Mood) => {
-        acc[mood.mood] = (acc[mood.mood] || 0) + 1;
-        return acc;
-        }, {});
-        const mostRepeatedMood = Object.keys(moodCount).reduce((a, b) => moodCount[a] > moodCount[b] ? a : b);
-        setMoodState({
-            ...moodState,
-            averageMood: mostRepeatedMood
-        })
-    }
+  const loadInitialData = async () => {
+    await getMoods();
+    await getAdvice();
+  };
 
-    const getMostRepeatedSleep = () => {
-        if( moodState.moodList.length === 0 ) return;
-        const sleepCount = moodState.moodList.reduce((acc: any, mood: Mood) => {
-        acc[mood.sleep] = (acc[mood.sleep] || 0) + 1;
-        return acc;
-        }, {});
-        const mostRepeatedSleep = Object.keys(sleepCount).reduce((a, b) => sleepCount[a] > sleepCount[b] ? a : b);
-        setMoodState({
-            ...moodState,
-            averageSleepSchedule: mostRepeatedSleep
-        })
-    }
+  useEffect(() => {
+    if (!authState.isLoggedIn) return;
+    getMoods();
+    getAdvice();
+  }, [authState.isLoggedIn]);
 
-    useEffect(() => {
-        getMoods();
-        getAdvice();
-    }, []);
+  useEffect(() => {
+    getTodayMood();
+    getMostRepeatedMood();
+    getMostRepeatedSleep();
+  }, [moodState.moodList]);
 
-    useEffect(() => {
-        getTodayMood();
-        getMostRepeatedMood();
-        getMostRepeatedSleep();
-    }, [moodState.moodList])
-    
-
-    return (
-        <MoodContext.Provider value={{
-            moodState
-        }}>
-            {children}
-        </MoodContext.Provider>
-    )
-
-}
-
+  return (
+    <MoodContext.Provider
+      value={{
+        moodState,
+        createMood,
+        loadInitialData,
+      }}
+    >
+      {children}
+    </MoodContext.Provider>
+  );
+};

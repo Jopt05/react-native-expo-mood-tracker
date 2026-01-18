@@ -8,9 +8,10 @@ import { ActivityIndicator, KeyboardAvoidingView, Text, TextInput, TouchableOpac
 
 export default function LoginScreen() {
 
-    const { login, registerUser } = useContext( AuthContext );
-    const { theme } = useContext( ThemeContext );
     const router = useRouter();
+
+    const { login, registerUser, authState } = useContext( AuthContext );
+    const { theme } = useContext( ThemeContext );
 
     const [isRegistering, setIsRegistering] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
@@ -28,7 +29,7 @@ export default function LoginScreen() {
         setIsRegistering(!isRegistering);
     }
 
-    async function handleRegister() {
+    function checkErrors() {
         if( !email ) {
             setErrorMessage("Email is required");
             return;
@@ -45,17 +46,19 @@ export default function LoginScreen() {
             setErrorMessage("Name is required");
             return;
         }
+        return true;
+    }
+
+    async function handleRegister() {
+        const noErrors = checkErrors();
+        if( !noErrors ) return;
+
         setIsLoading(true);
         const isRegistered = await registerUser({email, password, name});
         if( isRegistered ) {
             setErrorMessage("");
             setSetsuccessMessage("Registered in successfully");
-            const isLoggedIn = await login({email, password});
-            if( isLoggedIn ) {
-                setErrorMessage("");
-                router.replace("/home");
-                return;
-            }; 
+            await login({email, password});
             setIsLoading(false);
             return;
         };
@@ -72,15 +75,7 @@ export default function LoginScreen() {
             return;
         }
         setIsLoading(true);
-        const isLoggedIn = await login({email, password});
-        if( isLoggedIn ) {
-            setSetsuccessMessage("Logged in successfully");
-            setErrorMessage("");
-            setTimeout(() => {
-               router.replace("/home"); 
-            }, 500);
-            return;
-        };
+        await login({email, password});
         setErrorMessage("Invalid credentials");
         setIsLoading(false);
     }

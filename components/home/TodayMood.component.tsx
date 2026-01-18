@@ -1,17 +1,13 @@
+import { MoodContext } from "@/context/Mood.context";
 import { ThemeContext } from "@/context/Theme.context";
-import { useAdvice } from "@/hooks/useAdvice.hook";
-import { useMood } from "@/hooks/useMood.hook";
-import { moodToText, moodToImage, sleepToText } from "@/utils/mood";
+import { moodToImage, moodToText, sleepToText } from "@/utils/mood";
 import { Ionicons } from "@expo/vector-icons";
 import { useContext } from "react";
-import { View, Text, Image } from "react-native";
+import { Image, Text, View } from "react-native";
 
 export default function TodayMoodComponent() {
-  const { theme } = useContext(ThemeContext);
-
-  const { advice } = useAdvice();
-
-  const { todaysMood } = useMood();
+  const {theme} = useContext(ThemeContext);
+  const {moodState} = useContext(MoodContext);
 
   return (
     <>
@@ -41,7 +37,7 @@ export default function TodayMoodComponent() {
               color: theme.colors.primary,
             }}
           >
-            {moodToText(todaysMood!.mood)}
+            {moodToText(moodState.todaysMood!.mood)}
           </Text>
           <Text
             className="font-[Montserrat-regular] text-sm mt-6"
@@ -49,11 +45,14 @@ export default function TodayMoodComponent() {
               color: theme.colors.primary,
             }}
           >
-            "{advice}"
+            "{moodState.advice}"
           </Text>
         </View>
         <View className="flex flex-row flex-1 items-end justify-end">
-          <Image className="" source={moodToImage(todaysMood!.mood)} />
+          <Image
+            className=""
+            source={moodToImage(moodState.todaysMood!.mood)}
+          />
         </View>
       </View>
       <View
@@ -79,7 +78,7 @@ export default function TodayMoodComponent() {
             color: theme.colors.primary,
           }}
         >
-          {sleepToText(todaysMood!.sleep)} hours
+          {sleepToText(moodState.todaysMood!.sleep)} hours
         </Text>
       </View>
       <View
@@ -109,7 +108,7 @@ export default function TodayMoodComponent() {
             color: theme.colors.text,
           }}
         >
-          {todaysMood!.reflection || "No reflection this day"}
+          {moodState.todaysMood!.reflection || "No reflection this day"}
         </Text>
       </View>
     </>
