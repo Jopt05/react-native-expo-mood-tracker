@@ -25,6 +25,7 @@ export interface MoodContextProps {
   moodState: MoodState;
   createMood: (mood: Mood) => Promise<boolean | undefined>;
   loadInitialData: () => Promise<void>;
+  updatemood: (mood: Mood) => Promise<boolean | undefined>;
 }
 
 export const MoodContext = createContext({} as MoodContextProps);
@@ -54,7 +55,7 @@ export const MoodProvider = ({children}: any) => {
       const {data} = await moodTrackedApi.get<AdviceResponse>("/advices", {
         headers: {Authorization: `Bearer ${token}`},
       });
-      setMoodState({...moodState, advice: data.payload.advice});
+      setMoodState(x => ({...x, advice: data.payload.advice}));
     } catch (error) {
       console.log("Ocurrió un error en getAdvice");
       console.log(error);
@@ -122,6 +123,35 @@ export const MoodProvider = ({children}: any) => {
     }
   };
 
+  const updatemood = async (toUpdateMood: Mood) => {
+    try {
+      const token = await getItemFromAsyncStorage("authToken");
+      if (!token) return;
+      const body = {
+        mood: toUpdateMood.mood,
+        sleep: toUpdateMood.sleep,
+        reflection: toUpdateMood.reflection,
+      };
+      const {data} = await moodTrackedApi.put<CreateMoodResponse>(
+        "/moods/" + toUpdateMood.id,
+        body,
+        {headers: {Authorization: `Bearer ${token}`}},
+      );
+      if (data) {
+        setMoodState((x) => ({
+          ...x,
+          moodList: moodState.moodList.map((m) =>
+            m.id === data.payload.id ? data.payload : m,
+          ),
+        }));
+      }
+      return true;
+    } catch (error) {
+      console.log("Error al crear mood");
+      console.log(error);
+    }
+  };
+
   const loadInitialData = async () => {
     await getMoods();
     await getAdvice();
@@ -145,6 +175,7 @@ export const MoodProvider = ({children}: any) => {
         moodState,
         createMood,
         loadInitialData,
+        updatemood,
       }}
     >
       {children}

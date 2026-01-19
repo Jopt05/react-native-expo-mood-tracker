@@ -30,6 +30,10 @@ export default function HomeScreen() {
     setisRefreshing(false);
   };
 
+  const handleEditMood = () => {
+    setIsModalOpen(true);
+  }
+
   return (
     <ProtectedRoute>
       <ScrollView
@@ -74,7 +78,7 @@ export default function HomeScreen() {
           </>
         )}
 
-        {moodState.todaysMood && <TodayMoodComponent />}
+        {moodState.todaysMood && <TodayMoodComponent onEditMood={handleEditMood} />}
 
         <MoodResumeComponent onLinkClick={() => setIsMoodsModalOpen(true)} />
 

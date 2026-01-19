@@ -1,13 +1,23 @@
+import { Mood } from "@/apis/mood-tracker/interfaces";
 import { MoodContext } from "@/context/Mood.context";
 import { ThemeContext } from "@/context/Theme.context";
 import { moodToImage, moodToText, sleepToText } from "@/utils/mood";
 import { Ionicons } from "@expo/vector-icons";
 import { useContext } from "react";
-import { Image, Text, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
-export default function TodayMoodComponent() {
+interface TodayMoodComponentProps {
+  onEditMood: () => void;
+}
+
+export default function TodayMoodComponent({ onEditMood }: TodayMoodComponentProps) {
+
   const {theme} = useContext(ThemeContext);
   const {moodState} = useContext(MoodContext);
+
+  const handleEditMood = () => {
+    onEditMood();
+  }
 
   return (
     <>
@@ -102,14 +112,28 @@ export default function TodayMoodComponent() {
             Reflection
           </Text>
         </View>
-        <Text
-          className=" font-[Montserrat-regular] text-sm mt-8"
-          style={{
-            color: theme.colors.text,
-          }}
+        <View
+          className="flex flex-row items-center justify-between mt-8"
         >
-          {moodState.todaysMood!.reflection || "No reflection this day"}
-        </Text>
+          <Text
+            className=" font-[Montserrat-regular] text-sm mr-2"
+            style={{
+              color: theme.colors.text,
+            }}
+          >
+            {moodState.todaysMood!.reflection || "No reflection this day"}
+          </Text>
+          <TouchableOpacity
+            onPress={handleEditMood}
+          >
+            <Ionicons
+              className="p-1.5 bg-blue-500 rounded-md"
+              name="pencil-outline"
+              color={theme.colors.primary}
+              size={20}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </>
   );

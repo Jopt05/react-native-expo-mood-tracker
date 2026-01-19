@@ -2,7 +2,7 @@ import { Mood } from "@/apis/mood-tracker/interfaces";
 import { MoodContext } from "@/context/Mood.context";
 import { ThemeContext } from "@/context/Theme.context";
 import { useForm } from "@/hooks/useForm.hook";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -40,12 +40,13 @@ const STEP_TEXTS = [
 ];
 
 export default function ModalFormComponent(props: ModalComponentProps) {
+
   const {theme} = useContext(ThemeContext);
-  const {createMood} = useContext(MoodContext);
+  const { createMood, moodState, updatemood } = useContext(MoodContext);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const {mood, sleep, reflection, onChange} = useForm({
+  const {mood, sleep, reflection, onChange, setFormValue} = useForm({
     mood: "",
     sleep: "",
     reflection: "",
@@ -59,11 +60,29 @@ export default function ModalFormComponent(props: ModalComponentProps) {
     }
     setHasError(false);
     if (currentStep == 2) {
-      handleCreateMood();
+      if( moodState.todaysMood ) {
+        handleUpdateMood();
+      } else {
+        handleCreateMood();
+      }
       return;
     }
     setCurrentStep(currentStep + 1);
   };
+
+  const handleUpdateMood = async() => {
+    try {
+      setIsLoading(true);
+      await updatemood({mood, sleep, reflection, id: moodState.todaysMood!.id} as Mood);
+      setIsLoading(false);
+      setCurrentStep(0);
+      props.onClose();
+    } catch (error) {
+      console.log("Ocurrió un error al editar mood");
+      console.log(error);
+      return;
+    }
+  }
 
   const handleCreateMood = async () => {
     try {
@@ -82,11 +101,25 @@ export default function ModalFormComponent(props: ModalComponentProps) {
   const handleClose = async () => {
     setCurrentStep(0);
     setHasError(false);
-    onChange("", "mood");
-    onChange("", "sleep");
-    onChange("", "reflection");
+    setFormValue({
+      mood: "",
+      sleep: "",
+      reflection: "",
+    })
     props.onClose();
   };
+  
+  useEffect(() => {
+    if (!props.visible && !moodState.todaysMood) return;
+    const todayMood = moodState.todaysMood;
+    if (todayMood) {
+      setFormValue({
+        mood: todayMood.mood,
+        sleep: todayMood.sleep,
+        reflection: todayMood.reflection || "",
+      })
+    }
+  }, [props.visible])
 
   return (
     <Modal
