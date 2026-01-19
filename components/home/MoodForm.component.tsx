@@ -2,6 +2,7 @@ import { Mood } from "@/apis/mood-tracker/interfaces";
 import { MoodContext } from "@/context/Mood.context";
 import { ThemeContext } from "@/context/Theme.context";
 import { useForm } from "@/hooks/useForm.hook";
+import { useMoodForm } from "@/hooks/useMoodForm.hook";
 import { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -42,65 +43,21 @@ const STEP_TEXTS = [
 export default function ModalFormComponent(props: ModalComponentProps) {
 
   const {theme} = useContext(ThemeContext);
-  const { createMood, moodState, updatemood } = useContext(MoodContext);
-
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const { moodState } = useContext(MoodContext);
+  
   const {mood, sleep, reflection, onChange, setFormValue} = useForm({
     mood: "",
     sleep: "",
     reflection: "",
   });
-  const [hasError, setHasError] = useState(false);
+  const { moodFormState, resetMoodForm, handleNextStep } = useMoodForm({mood, sleep, reflection});
 
   const handleContinue = () => {
-    if ((currentStep == 0 && !mood) || (currentStep == 1 && !sleep)) {
-      setHasError(true);
-      return;
-    }
-    setHasError(false);
-    if (currentStep == 2) {
-      if( moodState.todaysMood ) {
-        handleUpdateMood();
-      } else {
-        handleCreateMood();
-      }
-      return;
-    }
-    setCurrentStep(currentStep + 1);
-  };
-
-  const handleUpdateMood = async() => {
-    try {
-      setIsLoading(true);
-      await updatemood({mood, sleep, reflection, id: moodState.todaysMood!.id} as Mood);
-      setIsLoading(false);
-      setCurrentStep(0);
-      props.onClose();
-    } catch (error) {
-      console.log("Ocurrió un error al editar mood");
-      console.log(error);
-      return;
-    }
+    handleNextStep(props.onClose);
   }
 
-  const handleCreateMood = async () => {
-    try {
-      setIsLoading(true);
-      const isCreated = await createMood({mood, sleep, reflection} as Mood);
-      setIsLoading(false);
-      setCurrentStep(0);
-      props.onClose();
-    } catch (error) {
-      console.log("Ocurrió un error al crear mood");
-      console.log(error);
-      return;
-    }
-  };
-
   const handleClose = async () => {
-    setCurrentStep(0);
-    setHasError(false);
+    resetMoodForm();
     setFormValue({
       mood: "",
       sleep: "",
@@ -162,33 +119,33 @@ export default function ModalFormComponent(props: ModalComponentProps) {
               className="flex flex-1 h-1"
               style={{
                 backgroundColor:
-                  currentStep === 0 ? "#20214f" : theme.colors.background,
+                  moodFormState.currentStep === 0 ? "#20214f" : theme.colors.background,
               }}
             ></View>
             <View
               className="flex flex-1 h-1"
               style={{
                 backgroundColor:
-                  currentStep === 1 ? "#20214f" : theme.colors.background,
+                  moodFormState.currentStep === 1 ? "#20214f" : theme.colors.background,
               }}
             ></View>
             <View
               className="flex flex-1 h-1"
               style={{
                 backgroundColor:
-                  currentStep === 2 ? "#20214f" : theme.colors.background,
+                  moodFormState.currentStep === 2 ? "#20214f" : theme.colors.background,
               }}
             ></View>
           </View>
           <Text
             className={`font-[Montserrat-regular] text-center mt-6 text-2xl`}
             style={{
-              color: hasError ? "#ff0000" : theme.colors.primary,
+              color: moodFormState.hasError ? "#ff0000" : theme.colors.primary,
             }}
           >
-            {STEP_TEXTS[currentStep]}
+            {STEP_TEXTS[moodFormState.currentStep]}
           </Text>
-          {currentStep === 0 && (
+          {moodFormState.currentStep === 0 && (
             <>
               {FIRST_STEP_ANSWERS.map((answer, key) => (
                 <TouchableOpacity
@@ -217,7 +174,7 @@ export default function ModalFormComponent(props: ModalComponentProps) {
               ))}
             </>
           )}
-          {currentStep === 1 && (
+          {moodFormState.currentStep === 1 && (
             <>
               {SECOND_STEP_ANSWERS.map((answer, key) => (
                 <TouchableOpacity
@@ -247,7 +204,7 @@ export default function ModalFormComponent(props: ModalComponentProps) {
               ))}
             </>
           )}
-          {currentStep === 2 && (
+          {moodFormState.currentStep === 2 && (
             <View className="flex flex-row mt-4">
               <TextInput
                 autoCorrect={false}
@@ -266,11 +223,11 @@ export default function ModalFormComponent(props: ModalComponentProps) {
           <TouchableOpacity onPress={handleContinue}>
             <View className="flex flex-row py-4 px-4 bg-[#3a3a59] mt-4">
               <Text className="flex flex-1 text-2xl text-[#f5f5ff] font-[Montserrat-regular] text-center">
-                {currentStep === 2 ? "Submit" : "Next"}
+                {moodFormState.currentStep === 2 ? "Submit" : "Next"}
               </Text>
             </View>
           </TouchableOpacity>
-          {isLoading && <ActivityIndicator className="mt-6" size="large" />}
+          {moodFormState.isLoading && <ActivityIndicator className="mt-6" size="large" />}
         </View>
       </View>
     </Modal>
