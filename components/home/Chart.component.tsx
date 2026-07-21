@@ -81,8 +81,8 @@ export default function ChartComponent(props: ChartComponentProps) {
     });
   }, [props.data]);
 
-  // Reverse data so most recent is on the left
-  const reversedData = [...chartData.data].reverse();
+  // Data comes with most recent first, keep that order
+  const chartMoods = chartData.data;
 
   const formatDate = (date: Date) => {
     const d = new Date(date);
@@ -94,13 +94,13 @@ export default function ChartComponent(props: ChartComponentProps) {
     if (isActive) {
       const xValue = pressState.x.value.value;
       const index = Math.round(xValue) - 1;
-      if (index >= 0 && index < reversedData.length) {
+      if (index >= 0 && index < chartMoods.length) {
         setSelectedIndex(index);
       }
     }
   }, [isActive, pressState.x.value.value]);
 
-  const selectedMood = selectedIndex !== null ? reversedData[selectedIndex] : null;
+  const selectedMood = selectedIndex !== null ? chartMoods[selectedIndex] : null;
 
   return (
     <View
@@ -167,9 +167,9 @@ export default function ChartComponent(props: ChartComponentProps) {
       )}
 
       <ScrollView horizontal className="flex flex-1 py-1 pb-2">
-        <View style={{ height: 320, width: Math.max(reversedData.length * 80, 400) }}>
+        <View style={{ height: 320, width: Math.max(chartMoods.length * 80, 400) }}>
           <CartesianChart
-            data={reversedData.map((m, index) => ({
+            data={chartMoods.map((m, index) => ({
               date: index + 1,
               value: sleepToNumber(m.sleep),
             }))}
@@ -186,14 +186,14 @@ export default function ChartComponent(props: ChartComponentProps) {
               labelColor: theme.colors.primary,
               tickValues: {
                 y: [0, 1, 2, 3, 4, 5],
-                x: reversedData.map((_, index) => index + 1),
+                x: chartMoods.map((_, index) => index + 1),
               },
               tickCount: {
                 y: 6,
-                x: reversedData.length,
+                x: chartMoods.length,
               },
               formatXLabel(label) {
-                const mood = reversedData[label - 1];
+                const mood = chartMoods[label - 1];
                 if (!mood) return "";
                 return formatDate(mood.createdAt);
               },
@@ -201,7 +201,7 @@ export default function ChartComponent(props: ChartComponentProps) {
           >
             {({ points, chartBounds }) => {
               return points.value.map((p, i) => {
-                const mood = reversedData[i];
+                const mood = chartMoods[i];
                 const img = mood ? moodSkiaImages[mood.mood] : null;
                 const imgSize = 28;
                 const isSelected = selectedIndex === i;
