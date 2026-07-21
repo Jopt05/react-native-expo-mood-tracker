@@ -68,6 +68,12 @@ export const useMoodForm = ({ mood, sleep, reflection }: UseMoodFormProps) => {
         }
     }
 
+    const handlePrevStep = () => {
+        if (moodFormState.currentStep > 0) {
+            setMoodFormState(x => ({ ...x, currentStep: x.currentStep - 1, hasError: false }));
+        }
+    }
+
     const resetMoodForm = () => {
         setMoodFormState({
             currentStep: 0,
@@ -79,7 +85,8 @@ export const useMoodForm = ({ mood, sleep, reflection }: UseMoodFormProps) => {
     return {
         moodFormState,
         resetMoodForm,
-        handleNextStep
+        handleNextStep,
+        handlePrevStep
     }
 
 }

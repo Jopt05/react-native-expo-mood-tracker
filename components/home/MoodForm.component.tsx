@@ -3,9 +3,10 @@ import { MoodContext } from "@/context/Mood.context";
 import { ThemeContext } from "@/context/Theme.context";
 import { useForm } from "@/hooks/useForm.hook";
 import { useMoodForm } from "@/hooks/useMoodForm.hook";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Text,
   TextInput,
@@ -18,20 +19,28 @@ interface ModalComponentProps {
   onClose: () => void;
 }
 
+const MOOD_ICONS: Record<string, ReturnType<typeof require>> = {
+  VERY_HAPPY: require("../../assets/images/very_happy.png"),
+  HAPPY: require("../../assets/images/happy.png"),
+  NEUTRAL: require("../../assets/images/neutral.png"),
+  SAD: require("../../assets/images/sad.png"),
+  VERY_SAD: require("../../assets/images/very_sad.png"),
+};
+
 const FIRST_STEP_ANSWERS = [
-  {key: "VERY_HAPPY", value: "Very happy"},
-  {key: "HAPPY", value: "Happy"},
-  {key: "NEUTRAL", value: "Neutral"},
-  {key: "SAD", value: "Sad"},
-  {key: "VERY_SAD", value: "Very sad"},
+  { key: "VERY_HAPPY", value: "Very happy" },
+  { key: "HAPPY", value: "Happy" },
+  { key: "NEUTRAL", value: "Neutral" },
+  { key: "SAD", value: "Sad" },
+  { key: "VERY_SAD", value: "Very sad" },
 ];
 
 const SECOND_STEP_ANSWERS = [
-  {key: "NINE", value: "+9"},
-  {key: "SEVEN_EIGHT", value: "6-8"},
-  {key: "FIVE_SIX", value: "5-6"},
-  {key: "THREE_FOUR", value: "3-4"},
-  {key: "ZERO_TWO", value: "0-2"},
+  { key: "NINE", value: "+9" },
+  { key: "SEVEN_EIGHT", value: "7-8" },
+  { key: "FIVE_SIX", value: "5-6" },
+  { key: "THREE_FOUR", value: "3-4" },
+  { key: "ZERO_TWO", value: "0-2" },
 ];
 
 const STEP_TEXTS = [
@@ -40,50 +49,56 @@ const STEP_TEXTS = [
   "Any thoughts for today?",
 ];
 
-export default function ModalFormComponent(props: ModalComponentProps) {
+const ERROR_TEXTS = [
+  "Please select your mood",
+  "Please select your sleep hours",
+  "",
+];
 
-  const {theme} = useContext(ThemeContext);
+export default function MoodFormComponent(props: ModalComponentProps) {
+  const { theme } = useContext(ThemeContext);
   const { moodState } = useContext(MoodContext);
-  
-  const {mood, sleep, reflection, onChange, setFormValue} = useForm({
+
+  const { mood, sleep, reflection, onChange, setFormValue } = useForm({
     mood: "",
     sleep: "",
     reflection: "",
   });
-  const { moodFormState, resetMoodForm, handleNextStep } = useMoodForm({mood, sleep, reflection});
+  const { moodFormState, resetMoodForm, handleNextStep, handlePrevStep } =
+    useMoodForm({ mood, sleep, reflection });
 
   const handleContinue = () => {
     handleNextStep(props.onClose);
-  }
+  };
 
-  const handleClose = async () => {
+  const handleBack = () => {
+    handlePrevStep();
+  };
+
+  const handleClose = () => {
     resetMoodForm();
-    setFormValue({
-      mood: "",
-      sleep: "",
-      reflection: "",
-    })
+    setFormValue({ mood: "", sleep: "", reflection: "" });
     props.onClose();
   };
-  
+
   useEffect(() => {
-    if (!props.visible && !moodState.todaysMood) return;
+    if (!props.visible) return;
     const todayMood = moodState.todaysMood;
     if (todayMood) {
       setFormValue({
         mood: todayMood.mood,
         sleep: todayMood.sleep,
         reflection: todayMood.reflection || "",
-      })
+      });
     }
-  }, [props.visible])
+  }, [props.visible, moodState.todaysMood]);
 
   return (
     <Modal
       animationType="slide"
       transparent={true}
       visible={props.visible}
-      onRequestClose={props.onClose}
+      onRequestClose={handleClose}
     >
       <View className="flex flex-1 relative justify-center items-center z-20">
         <TouchableOpacity
@@ -97,122 +112,142 @@ export default function ModalFormComponent(props: ModalComponentProps) {
             height: "100%",
             zIndex: 10,
           }}
-          onPress={() => handleClose()}
-        ></TouchableOpacity>
+          onPress={handleClose}
+        />
         <View
           style={{
             width: "90%",
             backgroundColor: theme.colors.card,
           }}
-          className="flex flex-col rounded-xl py-4 px-4 z-20"
+          className="flex flex-col rounded-xl py-5 px-5 z-20"
         >
           <Text
             className="font-[Montserrat-bold] text-3xl text-center"
-            style={{
-              color: theme.colors.primary,
-            }}
+            style={{ color: theme.colors.primary }}
           >
             Log your mood
           </Text>
-          <View className="flex flex-row gap-4 mt-6">
-            <View
-              className="flex flex-1 h-1"
-              style={{
-                backgroundColor:
-                  moodFormState.currentStep === 0 ? "#20214f" : theme.colors.background,
-              }}
-            ></View>
-            <View
-              className="flex flex-1 h-1"
-              style={{
-                backgroundColor:
-                  moodFormState.currentStep === 1 ? "#20214f" : theme.colors.background,
-              }}
-            ></View>
-            <View
-              className="flex flex-1 h-1"
-              style={{
-                backgroundColor:
-                  moodFormState.currentStep === 2 ? "#20214f" : theme.colors.background,
-              }}
-            ></View>
+
+          {/* Progress bar */}
+          <View className="flex flex-row gap-2 mt-5">
+            {[0, 1, 2].map((step) => (
+              <View
+                key={step}
+                className="flex flex-1 h-1 rounded-full"
+                style={{
+                  backgroundColor:
+                    step <= moodFormState.currentStep
+                      ? theme.colors.notification
+                      : theme.colors.background,
+                }}
+              />
+            ))}
           </View>
+
+          {/* Step question */}
           <Text
-            className={`font-[Montserrat-regular] text-center mt-6 text-2xl`}
-            style={{
-              color: moodFormState.hasError ? "#ff0000" : theme.colors.primary,
-            }}
+            className="font-[Montserrat-regular] text-center mt-5 text-xl"
+            style={{ color: theme.colors.primary }}
           >
             {STEP_TEXTS[moodFormState.currentStep]}
           </Text>
+
+          {/* Error message */}
+          {moodFormState.hasError && (
+            <Text
+              className="font-[Montserrat-regular] text-center mt-2 text-sm"
+              style={{ color: "#ff6b6b" }}
+            >
+              {ERROR_TEXTS[moodFormState.currentStep]}
+            </Text>
+          )}
+
+          {/* Step 1: Mood selection */}
           {moodFormState.currentStep === 0 && (
-            <>
-              {FIRST_STEP_ANSWERS.map((answer, key) => (
-                <TouchableOpacity
-                  className="mt-2"
-                  onPress={() => onChange(answer.key, "mood")}
-                  key={key}
-                >
-                  <View
-                    className="flex flex-row py-4 px-4"
-                    style={{
-                      borderWidth: 1,
-                      borderColor: mood === answer.key ? "grey" : "transparent",
-                      backgroundColor: theme.colors.background,
-                    }}
+            <View className="mt-3">
+              {FIRST_STEP_ANSWERS.map((answer) => {
+                const isSelected = mood === answer.key;
+                return (
+                  <TouchableOpacity
+                    className="mt-2"
+                    onPress={() => onChange(answer.key, "mood")}
+                    key={answer.key}
                   >
-                    <Text
-                      className="text-2xl font-[Montserrat-regular]"
+                    <View
+                      className="flex flex-row items-center py-3 px-4 rounded-lg"
                       style={{
-                        color: theme.colors.primary,
+                        borderWidth: 2,
+                        borderColor: isSelected
+                          ? theme.colors.notification
+                          : "transparent",
+                        backgroundColor: theme.colors.background,
                       }}
                     >
-                      {answer.value}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </>
+                      <Image
+                        source={MOOD_ICONS[answer.key]}
+                        style={{ width: 28, height: 28, marginRight: 12 }}
+                      />
+                      <Text
+                        className="text-lg font-[Montserrat-regular]"
+                        style={{ color: theme.colors.primary }}
+                      >
+                        {answer.value}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           )}
+
+          {/* Step 2: Sleep selection */}
           {moodFormState.currentStep === 1 && (
-            <>
-              {SECOND_STEP_ANSWERS.map((answer, key) => (
-                <TouchableOpacity
-                  className="mt-2"
-                  key={key}
-                  onPress={() => onChange(answer.key, "sleep")}
-                >
-                  <View
-                    className="flex flex-row py-4 px-4 bg-[#505194]"
-                    style={{
-                      borderWidth: 1,
-                      borderColor:
-                        sleep === answer.key ? "grey" : "transparent",
-                      backgroundColor: theme.colors.background,
-                    }}
+            <View className="mt-3">
+              {SECOND_STEP_ANSWERS.map((answer) => {
+                const isSelected = sleep === answer.key;
+                return (
+                  <TouchableOpacity
+                    className="mt-2"
+                    onPress={() => onChange(answer.key, "sleep")}
+                    key={answer.key}
                   >
-                    <Text
-                      className="text-2xl font-[Montserrat-regular]"
+                    <View
+                      className="flex flex-row items-center py-3 px-4 rounded-lg"
                       style={{
-                        color: theme.colors.primary,
+                        borderWidth: 2,
+                        borderColor: isSelected
+                          ? theme.colors.notification
+                          : "transparent",
+                        backgroundColor: theme.colors.background,
                       }}
                     >
-                      {answer.value} hours
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </>
+                      <Text
+                        className="text-lg font-[Montserrat-regular]"
+                        style={{ color: theme.colors.primary }}
+                      >
+                        {answer.value} hours
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           )}
+
+          {/* Step 3: Reflection */}
           {moodFormState.currentStep === 2 && (
-            <View className="flex flex-row mt-4">
+            <View className="mt-4">
               <TextInput
                 autoCorrect={false}
                 autoCapitalize="none"
-                className="flex flex-1 text-2xl font-[Montserrat-regular]"
+                placeholder="Write your thoughts here..."
+                placeholderTextColor={theme.colors.text}
+                className="text-lg font-[Montserrat-regular] rounded-lg py-3 px-4"
                 style={{
                   color: theme.colors.primary,
                   backgroundColor: theme.colors.background,
+                  minHeight: 100,
+                  textAlignVertical: "top",
                 }}
                 onChangeText={(value) => onChange(value, "reflection")}
                 value={reflection}
@@ -220,14 +255,49 @@ export default function ModalFormComponent(props: ModalComponentProps) {
               />
             </View>
           )}
-          <TouchableOpacity onPress={handleContinue}>
-            <View className="flex flex-row py-4 px-4 bg-[#3a3a59] mt-4">
-              <Text className="flex flex-1 text-2xl text-[#f5f5ff] font-[Montserrat-regular] text-center">
-                {moodFormState.currentStep === 2 ? "Submit" : "Next"}
-              </Text>
-            </View>
-          </TouchableOpacity>
-          {moodFormState.isLoading && <ActivityIndicator className="mt-6" size="large" />}
+
+          {/* Action buttons */}
+          <View className="flex flex-row gap-3 mt-5">
+            {moodFormState.currentStep > 0 && (
+              <TouchableOpacity
+                onPress={handleBack}
+                className="flex-1"
+              >
+                <View
+                  className="py-3 px-4 rounded-lg items-center"
+                  style={{
+                    backgroundColor: theme.colors.background,
+                  }}
+                >
+                  <Text
+                    className="text-lg font-[Montserrat-regular]"
+                    style={{ color: theme.colors.primary }}
+                  >
+                    Back
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              onPress={handleContinue}
+              className="flex-1"
+            >
+              <View
+                className="py-3 px-4 rounded-lg items-center"
+                style={{
+                  backgroundColor: theme.colors.notification,
+                }}
+              >
+                <Text className="text-lg font-[Montserrat-regular] text-white">
+                  {moodFormState.currentStep === 2 ? "Submit" : "Next"}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {moodFormState.isLoading && (
+            <ActivityIndicator className="mt-4" size="large" />
+          )}
         </View>
       </View>
     </Modal>
