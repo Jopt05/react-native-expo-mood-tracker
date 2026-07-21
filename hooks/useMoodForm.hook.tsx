@@ -1,5 +1,6 @@
 import { Mood } from "@/apis/mood-tracker/interfaces";
 import { MoodContext } from "@/context/Mood.context";
+import { useToast } from "@/hooks/useToast.hook";
 import { useContext, useState } from "react"
 
 interface UseMoodFormProps {
@@ -11,6 +12,7 @@ interface UseMoodFormProps {
 export const useMoodForm = ({ mood, sleep, reflection }: UseMoodFormProps) => {
 
     const { moodState, updatemood, createMood } = useContext(MoodContext);
+    const { showToast } = useToast();
 
     const [moodFormState, setMoodFormState] = useState({
         currentStep: 0,
@@ -47,9 +49,11 @@ export const useMoodForm = ({ mood, sleep, reflection }: UseMoodFormProps) => {
             await createMood({mood, sleep, reflection} as Mood);
 
             setMoodFormState(x => ({ ...x, isLoading: false }));
+            showToast({ message: "Mood logged ✓", type: "success" });
         } catch (error) {
             console.log("Ocurrió un error al crear mood");
             console.log(error);
+            showToast({ message: "Failed to log mood", type: "error" });
             return;
         }
     };
@@ -61,9 +65,11 @@ export const useMoodForm = ({ mood, sleep, reflection }: UseMoodFormProps) => {
             await updatemood({mood, sleep, reflection, id: moodState.todaysMood!.id} as Mood);
             
             setMoodFormState(x => ({ ...x, isLoading: false }));
+            showToast({ message: "Mood updated ✓", type: "success" });
         } catch (error) {
             console.log("Ocurrió un error al editar mood");
             console.log(error);
+            showToast({ message: "Failed to update mood", type: "error" });
             return;
         }
     }

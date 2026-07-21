@@ -3,8 +3,8 @@ import { ThemeContext } from "@/context/Theme.context";
 import { formatMoodToChartColor } from "@/utils/mood";
 import { Image, useFont, useImage } from "@shopify/react-native-skia";
 import { useContext, useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
-import { Bar, CartesianChart } from "victory-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Bar, CartesianChart, useChartPressState } from "victory-native";
 
 interface ChartComponentProps {
   data: Mood[];
@@ -13,8 +13,6 @@ interface ChartComponentProps {
 interface ChartDataState extends ChartComponentProps {
   isLoading: boolean;
 }
-
-
 
 const MONTHS_SHORT = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -69,6 +67,13 @@ export default function ChartComponent(props: ChartComponentProps) {
     data: [],
   });
 
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  const { state: pressState, isActive } = useChartPressState({
+    x: 0,
+    y: { value: 0 },
+  });
+
   useEffect(() => {
     setChartData({
       isLoading: false,
@@ -84,6 +89,19 @@ export default function ChartComponent(props: ChartComponentProps) {
     return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
   };
 
+  // Track press state to determine selected bar
+  useEffect(() => {
+    if (isActive) {
+      const xValue = pressState.x.value.value;
+      const index = Math.round(xValue) - 1;
+      if (index >= 0 && index < reversedData.length) {
+        setSelectedIndex(index);
+      }
+    }
+  }, [isActive, pressState.x.value.value]);
+
+  const selectedMood = selectedIndex !== null ? reversedData[selectedIndex] : null;
+
   return (
     <View
       className="flex flex-col py-4 px-4 mt-4 rounded-xl"
@@ -95,6 +113,59 @@ export default function ChartComponent(props: ChartComponentProps) {
       >
         Moods and sleep trends
       </Text>
+
+      {/* Hint */}
+      {!selectedMood && (
+        <Text
+          className="font-[Montserrat-regular] text-xs mb-2"
+          style={{ color: theme.colors.text }}
+        >
+          Press and hold a bar to see your reflection
+        </Text>
+      )}
+
+      {/* Tooltip */}
+      {selectedMood && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setSelectedIndex(null)}
+        >
+          <View
+            className="rounded-lg py-2 px-3 mb-2 flex-row items-center"
+            style={{
+              backgroundColor: "#f5f5ff",
+              alignSelf: "flex-start",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+              elevation: 4,
+            }}
+          >
+            <View className="flex-1">
+              <Text
+                className="font-[Montserrat-bold] text-sm"
+                style={{ color: "#20214f" }}
+              >
+                {formatDate(selectedMood.createdAt)}
+              </Text>
+              <Text
+                className="font-[Montserrat-regular] text-sm mt-1"
+                style={{ color: "#3a3a59" }}
+              >
+                {selectedMood.reflection || "No reflection"}
+              </Text>
+            </View>
+            <Text
+              className="font-[Montserrat-bold] text-base ml-3"
+              style={{ color: "#999" }}
+            >
+              ✕
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
       <ScrollView horizontal className="flex flex-1 py-1 pb-2">
         <View style={{ height: 320, width: Math.max(reversedData.length * 80, 400) }}>
           <CartesianChart
@@ -106,6 +177,7 @@ export default function ChartComponent(props: ChartComponentProps) {
             yKeys={["value"]}
             domainPadding={{ left: 50, right: 50, top: 40 }}
             domain={{ y: [0, 5] }}
+            chartPressState={pressState}
             axisOptions={{
               font,
               formatYLabel(value) {
@@ -132,6 +204,7 @@ export default function ChartComponent(props: ChartComponentProps) {
                 const mood = reversedData[i];
                 const img = mood ? moodSkiaImages[mood.mood] : null;
                 const imgSize = 28;
+                const isSelected = selectedIndex === i;
 
                 return (
                   <>
@@ -148,6 +221,7 @@ export default function ChartComponent(props: ChartComponentProps) {
                         bottomRight: 10,
                       }}
                       color={mood ? formatMoodToChartColor(mood.mood) : "#ccc"}
+                      barWidth={isSelected ? 38 : undefined}
                     />
                     {img && p.y != null && p.x != null && (
                       <Image
@@ -166,7 +240,6 @@ export default function ChartComponent(props: ChartComponentProps) {
           </CartesianChart>
         </View>
       </ScrollView>
-
     </View>
   );
 }

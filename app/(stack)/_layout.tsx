@@ -2,6 +2,7 @@ import HeaderComponent from "@/components/shared/Header.component";
 import { AuthProvider } from "@/context/Auth.context";
 import { CameraProvider } from "@/context/Camera.context";
 import { ThemeContext, ThemeProvider } from "@/context/Theme.context";
+import { ToastProvider } from "@/context/Toast.context";
 import { Stack } from "expo-router";
 import { useContext } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,13 +12,15 @@ import { MoodProvider } from "@/context/Mood.context";
 const AppState = ({children}: any) => {
   return (
     <AuthProvider>
-      <MoodProvider>
-        <ThemeProvider>
-          <CameraProvider>
-            {children}
-          </CameraProvider>
-        </ThemeProvider>
-      </MoodProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <MoodProvider>
+            <CameraProvider>
+              {children}
+            </CameraProvider>
+          </MoodProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </AuthProvider>
   )
 }
