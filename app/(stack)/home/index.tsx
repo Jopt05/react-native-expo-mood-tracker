@@ -3,10 +3,13 @@ import HomeHeaderComponent from "@/components/home/HomeHeader.component";
 import ModalFormComponent from "@/components/home/MoodForm.component";
 import MoodListComponent from "@/components/home/MoodList.component";
 import MoodResumeComponent from "@/components/home/MoodResume.component";
+import StatsAverageComponent from "@/components/home/StatsAverage.component";
+import StatsDistributionComponent from "@/components/home/StatsDistribution.component";
 import TodayMoodComponent from "@/components/home/TodayMood.component";
 import ProtectedRoute from "@/components/shared/ProtectedRoute.component";
 import { MoodContext } from "@/context/Mood.context";
 import { ThemeContext } from "@/context/Theme.context";
+import { useStats } from "@/hooks/useStats.hook";
 import { useContext, useState } from "react";
 import {
     RefreshControl,
@@ -24,9 +27,19 @@ export default function HomeScreen() {
   const [isMoodsModalOpen, setIsMoodsModalOpen] = useState(false);
   const [isRefreshing, setisRefreshing] = useState(false);
 
+  const {
+    stats,
+    distributionPeriod,
+    averagePeriod,
+    setDistributionPeriod,
+    setAveragePeriod,
+    loadStats,
+  } = useStats();
+
   const handleRefresh = async () => {
     setisRefreshing(true);
     await loadInitialData();
+    await loadStats();
     setisRefreshing(false);
   };
 
@@ -85,6 +98,18 @@ export default function HomeScreen() {
         {!isModalOpen && !isMoodsModalOpen && (
           <ChartComponent data={moodState.moodList} />
         )}
+
+        <StatsDistributionComponent
+          distribution={stats.distribution}
+          period={distributionPeriod}
+          onPeriodChange={setDistributionPeriod}
+        />
+
+        <StatsAverageComponent
+          average={stats.average}
+          period={averagePeriod}
+          onPeriodChange={setAveragePeriod}
+        />
         <View className="flex flex-row justify-center my-8">
           <Text
             className=" font-[Montserrat-thin] text-sm"
