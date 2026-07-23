@@ -5,7 +5,9 @@ import { moodToImage, sleepToText } from "@/utils/mood";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Image, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, Modal, Text, TouchableOpacity, View } from "react-native";
+import { Gesture, GestureDetector, GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import DateTimePicker, { DateType, useDefaultStyles } from 'react-native-ui-datepicker';
 import DayfaceComponent from "./Dayface.component";
 
@@ -30,6 +32,85 @@ export default function MoodListComponent(props: ModalComponentProps) {
     const defaultStyles = useDefaultStyles();
     const [selected, setSelected] = useState<DateType>();
     const [selectedMood, setSelectedMood] = useState<Mood>();
+    const [displayedMonth, setDisplayedMonth] = useState<number>(new Date().getMonth() + 1);
+    const [displayedYear, setDisplayedYear] = useState<number>(new Date().getFullYear());
+    const [showSwipeHint, setShowSwipeHint] = useState(true);
+
+    const SWIPE_THRESHOLD = 50;
+    const SLIDE_DISTANCE = 300;
+    const translateX = useSharedValue(0);
+    const opacity = useSharedValue(1);
+    const hintOpacity = useSharedValue(1);
+
+    const animatedCalendarStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: translateX.value }],
+        opacity: opacity.value,
+    }));
+
+    const animatedHintStyle = useAnimatedStyle(() => ({
+        opacity: hintOpacity.value,
+    }));
+
+    const hideSwipeHint = () => {
+        if (showSwipeHint) {
+            setShowSwipeHint(false);
+            hintOpacity.value = withTiming(0, { duration: 300 });
+        }
+    };
+
+    const animateMonthChange = (direction: 'left' | 'right') => {
+        hideSwipeHint();
+        const exitTo = direction === 'left' ? -SLIDE_DISTANCE : SLIDE_DISTANCE;
+        const enterFrom = direction === 'left' ? SLIDE_DISTANCE : -SLIDE_DISTANCE;
+
+        // Slide out
+        translateX.value = withTiming(exitTo, { duration: 150 });
+        opacity.value = withTiming(0, { duration: 150 }, () => {
+            // Change month
+            if (direction === 'left') {
+                runOnJS(goToNextMonth)();
+            } else {
+                runOnJS(goToPrevMonth)();
+            }
+            // Reset position to enter from opposite side
+            translateX.value = enterFrom;
+            // Slide in
+            translateX.value = withTiming(0, { duration: 200 });
+            opacity.value = withTiming(1, { duration: 200 });
+        });
+    };
+
+    const goToNextMonth = () => {
+        setDisplayedMonth((prev) => {
+            if (prev === 12) {
+                setDisplayedYear((y) => y + 1);
+                return 1;
+            }
+            return prev + 1;
+        });
+    };
+
+    const goToPrevMonth = () => {
+        setDisplayedMonth((prev) => {
+            if (prev === 1) {
+                setDisplayedYear((y) => y - 1);
+                return 12;
+            }
+            return prev - 1;
+        });
+    };
+
+    const swipeGesture = Gesture.Pan()
+        .activeOffsetX([-SWIPE_THRESHOLD, SWIPE_THRESHOLD])
+        .failOffsetY([-20, 20])
+        .onEnd((event) => {
+            'worklet';
+            if (event.translationX < -SWIPE_THRESHOLD) {
+                runOnJS(animateMonthChange)('left');
+            } else if (event.translationX > SWIPE_THRESHOLD) {
+                runOnJS(animateMonthChange)('right');
+            }
+        });
 
     useEffect(() => {
         if( !props.visible ) return; 
@@ -101,6 +182,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
             visible={props.visible}
             onRequestClose={() => handleClose()}
         >
+            <GestureHandlerRootView style={{ flex: 1 }}>
             <View
                 className="flex flex-1 relative justify-center items-center z-20"
             >
@@ -134,75 +216,93 @@ export default function MoodListComponent(props: ModalComponentProps) {
                     >
                         Your previous check ins
                     </Text>
-                    <DateTimePicker
-                        mode="single"
-                        date={selected}
-                        onChange={({ date }) =>  {
-                            if( !date ) return setSelectedMood(undefined);
-                            setSelected(date);
-                        }}
-                        components={{
-                            Day(day) {
-                                const plainDate = new Date(day.date).setHours(0, 0, 0, 0);
-                                const matchingMood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
-                                return <DayfaceComponent day={day} matchingMood={matchingMood} />
-                            },
-                        }}
-                        disabledDates={(date) => {
-                            const plainDate = new Date(date as Date).setHours(0, 0, 0, 0);
-                            const matchingMood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
-                            return !matchingMood;
-                        }}
-                        styles={{
-                            ...defaultStyles,
-                            day_label: {
-                                color: theme.colors.primary
-                            },
-                            month_label: {
-                                color: theme.colors.primary
-                            },
-                            year_label: {
-                                color: theme.colors.primary
-                            },
-                            selected: {
-                                backgroundColor: theme.colors.card
-                            },
-                            weekday_label: {
-                                color: theme.colors.text
-                            },
-                            month_selector_label: {
-                                color: theme.colors.primary
-                            },
-                            year_selector_label: {
-                                color: theme.colors.primary
-                            },
-                            selected_month: {
-                                backgroundColor: theme.colors.card
-                            },
-                            selected_year: {
-                                backgroundColor: theme.colors.card
-                            },
-                            today: {
-                                backgroundColor: 'transparent'
-                            },
-                            button_prev: {
-                                backgroundColor: theme.colors.card,
-                                borderRadius: 10,
-                                color: 'red'
-                            },
-                            button_next: {
-                                backgroundColor: theme.colors.card,
-                                borderRadius: 10,
-                                color: 'red'
-                            },
-                            button_next_image: {
-                                tintColor: theme.colors.primary
-                            },
-                            button_prev_image: {
-                                tintColor: theme.colors.primary
-                            }
-                        }}
-                    />
+                    <GestureDetector gesture={swipeGesture}>
+                        <Animated.View style={[{ overflow: 'hidden' }, animatedCalendarStyle]}>
+                            <DateTimePicker
+                                mode="single"
+                                date={selected}
+                                month={displayedMonth}
+                                year={displayedYear}
+                                onMonthChange={(month) => setDisplayedMonth(month)}
+                                onYearChange={(year) => setDisplayedYear(year)}
+                                onChange={({ date }) =>  {
+                                    if( !date ) return setSelectedMood(undefined);
+                                    setSelected(date);
+                                }}
+                                components={{
+                                    Day(day) {
+                                        const plainDate = new Date(day.date).setHours(0, 0, 0, 0);
+                                        const matchingMood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
+                                        return <DayfaceComponent day={day} matchingMood={matchingMood} />
+                                    },
+                                }}
+                                disabledDates={(date) => {
+                                    const plainDate = new Date(date as Date).setHours(0, 0, 0, 0);
+                                    const matchingMood = moodsList.find(mood => new Date(mood.createdAt).setHours(0, 0, 0, 0) === plainDate);
+                                    return !matchingMood;
+                                }}
+                                styles={{
+                                    ...defaultStyles,
+                                    day_label: {
+                                        color: theme.colors.primary
+                                    },
+                                    month_label: {
+                                        color: theme.colors.primary
+                                    },
+                                    year_label: {
+                                        color: theme.colors.primary
+                                    },
+                                    selected: {
+                                        backgroundColor: theme.colors.card
+                                    },
+                                    weekday_label: {
+                                        color: theme.colors.text
+                                    },
+                                    month_selector_label: {
+                                        color: theme.colors.primary
+                                    },
+                                    year_selector_label: {
+                                        color: theme.colors.primary
+                                    },
+                                    selected_month: {
+                                        backgroundColor: theme.colors.card
+                                    },
+                                    selected_year: {
+                                        backgroundColor: theme.colors.card
+                                    },
+                                    today: {
+                                        backgroundColor: 'transparent'
+                                    },
+                                    button_prev: {
+                                        backgroundColor: theme.colors.card,
+                                        borderRadius: 10,
+                                        color: 'red'
+                                    },
+                                    button_next: {
+                                        backgroundColor: theme.colors.card,
+                                        borderRadius: 10,
+                                        color: 'red'
+                                    },
+                                    button_next_image: {
+                                        tintColor: theme.colors.primary
+                                    },
+                                    button_prev_image: {
+                                        tintColor: theme.colors.primary
+                                    }
+                                }}
+                            />
+                        </Animated.View>
+                    </GestureDetector>
+                    {showSwipeHint && (
+                        <Animated.View style={[{ alignItems: 'center', marginTop: 4, marginBottom: 4 }, animatedHintStyle]}>
+                            <Text
+                                className="font-[Montserrat-light] text-xs"
+                                style={{ color: theme.colors.text, opacity: 0.6 }}
+                            >
+                                ← Swipe left or right to navigate →
+                            </Text>
+                        </Animated.View>
+                    )}
                     {
                         (selectedMood) && (
                             <View
@@ -279,6 +379,7 @@ export default function MoodListComponent(props: ModalComponentProps) {
                     }
                 </ScrollView>
             </View>
+            </GestureHandlerRootView>
         </Modal>
     )
 }
